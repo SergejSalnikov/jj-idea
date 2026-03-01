@@ -374,6 +374,86 @@ class JujutsuLogContextMenuActionsTest {
     }
 
     @Nested
+    inner class `Squash action availability` {
+        @Test
+        fun `immutable entry filtered out`() {
+            val entry = createEntry("abc123", immutable = true)
+
+            val squashTarget = entry.takeIf { !it.immutable }
+
+            squashTarget.shouldBeNull()
+        }
+
+        @Test
+        fun `mutable entry passes through`() {
+            val entry = createEntry("abc123", immutable = false)
+
+            val squashTarget = entry.takeIf { !it.immutable }
+
+            squashTarget.shouldNotBeNull()
+        }
+
+        @Test
+        fun `working copy mutable entry passes through`() {
+            val entry = createEntry("abc123", isWorkingCopy = true, immutable = false)
+
+            val squashTarget = entry.takeIf { !it.immutable }
+
+            squashTarget.shouldNotBeNull()
+            squashTarget.isWorkingCopy shouldBe true
+        }
+
+        @Test
+        fun `multi-select returns null for single selection`() {
+            val entries = listOf(createEntry("abc123"), createEntry("def456"))
+
+            val entry = entries.singleOrNull()
+
+            entry.shouldBeNull()
+        }
+    }
+
+    @Nested
+    inner class `Split action availability` {
+        @Test
+        fun `immutable entry filtered out`() {
+            val entry = createEntry("abc123", immutable = true)
+
+            val splitTarget = entry.takeIf { !it.immutable }
+
+            splitTarget.shouldBeNull()
+        }
+
+        @Test
+        fun `mutable entry passes through`() {
+            val entry = createEntry("abc123", immutable = false)
+
+            val splitTarget = entry.takeIf { !it.immutable }
+
+            splitTarget.shouldNotBeNull()
+        }
+
+        @Test
+        fun `working copy mutable entry passes through`() {
+            val entry = createEntry("abc123", isWorkingCopy = true, immutable = false)
+
+            val splitTarget = entry.takeIf { !it.immutable }
+
+            splitTarget.shouldNotBeNull()
+            splitTarget.isWorkingCopy shouldBe true
+        }
+
+        @Test
+        fun `multi-select returns null for single selection`() {
+            val entries = listOf(createEntry("abc123"), createEntry("def456"))
+
+            val entry = entries.singleOrNull()
+
+            entry.shouldBeNull()
+        }
+    }
+
+    @Nested
     inner class `Entry property combinations` {
         @Test
         fun `entry with conflict is still mutable`() {
