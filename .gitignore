@@ -20,3 +20,7 @@ dist/
 # Others
 hs_err_pid*.log
 .kotlin/
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db

@@ -370,9 +370,7 @@ class UnifiedWorkingCopyPanel(private val project: Project) : JPanel(BorderLayou
 
     private fun openFileInPreview(change: Change) {
         val virtualFile = change.filePath?.virtualFile ?: return
-        ApplicationManager.getApplication().invokeLater {
-            OpenFileDescriptor(project, virtualFile).navigate(true)
-        }
+        OpenFileDescriptor(project, virtualFile).navigate(true)
     }
 
     private fun loadCollapsedPaths(): MutableSet<String> {
