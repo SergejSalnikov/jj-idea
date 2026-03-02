@@ -1,6 +1,7 @@
 package `in`.kkkev.jjidea.ui.log
 
 import `in`.kkkev.jjidea.jj.*
+import `in`.kkkev.jjidea.vcs.actions.squashableEntry
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -44,14 +45,17 @@ class JujutsuLogContextMenuActionsTest {
         isWorkingCopy: Boolean = false,
         immutable: Boolean = false,
         isEmpty: Boolean = true,
-        repo: JujutsuRepository = repo1
+        repo: JujutsuRepository = repo1,
+        parentIds: List<String> = emptyList()
     ) = LogEntry(
         repo = repo,
         id = ChangeId(changeId, changeId.take(2), null),
         commitId = CommitId("0000000000000000000000000000000000000000"),
         underlyingDescription = "Test commit",
         bookmarks = emptyList(),
-        parentIdentifiers = emptyList(),
+        parentIdentifiers = parentIds.map {
+            LogEntry.Identifiers(ChangeId(it, it.take(2), null), CommitId(it))
+        },
         isWorkingCopy = isWorkingCopy,
         hasConflict = false,
         isEmpty = isEmpty,
@@ -370,6 +374,111 @@ class JujutsuLogContextMenuActionsTest {
 
             rebaseRepo shouldBe repo1
             mutableEntries.size shouldBe 1
+        }
+    }
+
+    @Nested
+    inner class `Squash action availability` {
+        private val parent by lazy { createEntry("parent1", immutable = false) }
+        private val immutableParent by lazy { createEntry("parent2", immutable = true) }
+        private val allEntries by lazy { listOf(parent, immutableParent) }
+
+        @Test
+        fun `immutable entry filtered out`() {
+            val entry = createEntry("abc123", immutable = true, parentIds = listOf("parent1"))
+
+            squashableEntry(entry, allEntries).shouldBeNull()
+        }
+
+        @Test
+        fun `mutable entry with mutable parent passes through`() {
+            val entry = createEntry("abc123", immutable = false, parentIds = listOf("parent1"))
+
+            squashableEntry(entry, allEntries).shouldNotBeNull()
+        }
+
+        @Test
+        fun `working copy mutable entry passes through`() {
+            val entry = createEntry("abc123", isWorkingCopy = true, immutable = false, parentIds = listOf("parent1"))
+
+            val result = squashableEntry(entry, allEntries)
+            result.shouldNotBeNull()
+            result.isWorkingCopy shouldBe true
+        }
+
+        @Test
+        fun `multi-select returns null for single selection`() {
+            val entries = listOf(createEntry("abc123"), createEntry("def456"))
+
+            entries.singleOrNull().shouldBeNull()
+        }
+
+        @Test
+        fun `immutable parent disables squash`() {
+            val entry = createEntry("abc123", immutable = false, parentIds = listOf("parent2"))
+
+            squashableEntry(entry, allEntries).shouldBeNull()
+        }
+
+        @Test
+        fun `merge commit with multiple parents disables squash`() {
+            val entry = createEntry("abc123", immutable = false, parentIds = listOf("parent1", "parent2"))
+
+            squashableEntry(entry, allEntries).shouldBeNull()
+        }
+
+        @Test
+        fun `root commit with no parents disables squash`() {
+            val entry = createEntry("abc123", immutable = false, parentIds = emptyList())
+
+            squashableEntry(entry, allEntries).shouldBeNull()
+        }
+
+        @Test
+        fun `parent not in allEntries still allows squash`() {
+            val entry = createEntry("abc123", immutable = false, parentIds = listOf("unknown"))
+
+            squashableEntry(entry, allEntries).shouldNotBeNull()
+        }
+    }
+
+    @Nested
+    inner class `Split action availability` {
+        @Test
+        fun `immutable entry filtered out`() {
+            val entry = createEntry("abc123", immutable = true)
+
+            val splitTarget = entry.takeIf { !it.immutable }
+
+            splitTarget.shouldBeNull()
+        }
+
+        @Test
+        fun `mutable entry passes through`() {
+            val entry = createEntry("abc123", immutable = false)
+
+            val splitTarget = entry.takeIf { !it.immutable }
+
+            splitTarget.shouldNotBeNull()
+        }
+
+        @Test
+        fun `working copy mutable entry passes through`() {
+            val entry = createEntry("abc123", isWorkingCopy = true, immutable = false)
+
+            val splitTarget = entry.takeIf { !it.immutable }
+
+            splitTarget.shouldNotBeNull()
+            splitTarget.isWorkingCopy shouldBe true
+        }
+
+        @Test
+        fun `multi-select returns null for single selection`() {
+            val entries = listOf(createEntry("abc123"), createEntry("def456"))
+
+            val entry = entries.singleOrNull()
+
+            entry.shouldBeNull()
         }
     }
 

@@ -21,7 +21,8 @@ import javax.swing.tree.DefaultTreeModel
  * Changes tree for Jujutsu tool window using IntelliJ's built-in changes tree infrastructure.
  * Provides grouping, speed search, and standard VCS actions.
  */
-class JujutsuChangesTree(project: Project) : AsyncChangesTreeImpl.Changes(project, false, true) {
+class JujutsuChangesTree(project: Project, showCheckboxes: Boolean = false) :
+    AsyncChangesTreeImpl.Changes(project, showCheckboxes, true) {
     /**
      * Optional additional data provider to inject context-specific data keys.
      * Called from [uiDataSnapshot] to allow parent panels to provide context like [JujutsuDataKeys.LOG_ENTRY].

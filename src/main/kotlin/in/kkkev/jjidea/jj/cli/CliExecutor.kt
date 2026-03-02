@@ -44,6 +44,42 @@ internal fun gitPushArgs(
     }
 }
 
+/** Build the argument list for `jj squash`. */
+internal fun squashArgs(
+    revision: Revision,
+    filePaths: List<String> = emptyList(),
+    description: Description? = null,
+    keepEmptied: Boolean = false
+): List<String> = buildList {
+    add("squash")
+    add("-r")
+    add(revision.toString())
+    if (description != null) {
+        add("-m")
+        add(description.actual)
+    }
+    if (keepEmptied) add("--keep-emptied")
+    addAll(filePaths)
+}
+
+/** Build the argument list for `jj split`. */
+internal fun splitArgs(
+    revision: Revision,
+    filePaths: List<String> = emptyList(),
+    description: Description? = null,
+    parallel: Boolean = false
+): List<String> = buildList {
+    add("split")
+    add("-r")
+    add(revision.toString())
+    if (description != null) {
+        add("-m")
+        add(description.actual)
+    }
+    if (parallel) add("--parallel")
+    addAll(filePaths)
+}
+
 /** Build the argument list for `jj rebase`. */
 internal fun rebaseArgs(
     revisions: List<Revision>,
@@ -173,6 +209,20 @@ class CliExecutor(
         sourceMode: RebaseSourceMode,
         destinationMode: RebaseDestinationMode
     ) = execute(root, rebaseArgs(revisions, destinations, sourceMode, destinationMode))
+
+    override fun squash(
+        revision: Revision,
+        filePaths: List<FilePath>,
+        description: Description?,
+        keepEmptied: Boolean
+    ) = execute(root, squashArgs(revision, filePaths.map { it.relativeTo(root) }, description, keepEmptied))
+
+    override fun split(
+        revision: Revision,
+        filePaths: List<FilePath>,
+        description: Description?,
+        parallel: Boolean
+    ) = execute(root, splitArgs(revision, filePaths.map { it.relativeTo(root) }, description, parallel))
 
     override fun gitFetch(remote: String?, allRemotes: Boolean) =
         execute(root, gitFetchArgs(remote, allRemotes), timeout = networkTimeout)

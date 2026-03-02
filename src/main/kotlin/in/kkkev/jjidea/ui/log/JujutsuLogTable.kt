@@ -286,8 +286,12 @@ class JujutsuLogTable(
     val selectedEntries get() = selectedRows.map(::convertRowIndexToModel).mapNotNull(logModel::getEntry)
 
     fun setEntries(entries: List<LogEntry>) {
-        selectedEntry?.let {
-            requestSelection(ChangeKey(it.repo, it.id))
+        // Only auto-reselect the current entry if no explicit selection was requested
+        // (e.g., via changeSelection.notify after a VCS operation like squash or edit)
+        if (pendingSelection == null) {
+            selectedEntry?.let {
+                requestSelection(ChangeKey(it.repo, it.id))
+            }
         }
         logModel.setEntries(entries)
         pendingSelection?.let {

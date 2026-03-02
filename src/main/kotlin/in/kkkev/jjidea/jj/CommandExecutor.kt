@@ -175,6 +175,36 @@ interface CommandExecutor {
     fun gitPush(remote: String? = null, bookmark: String? = null, allBookmarks: Boolean = false): CommandResult
 
     /**
+     * Squash a change into its parent.
+     * @param revision The revision to squash (default: working copy)
+     * @param filePaths Specific files to squash (empty = all files)
+     * @param description Description for the combined result (null = let jj merge)
+     * @param keepEmptied Keep the emptied source change
+     * @return Command result
+     */
+    fun squash(
+        revision: Revision = WorkingCopy,
+        filePaths: List<FilePath> = emptyList(),
+        description: Description? = null,
+        keepEmptied: Boolean = false
+    ): CommandResult
+
+    /**
+     * Split a change into two changes.
+     * @param revision The revision to split (default: working copy)
+     * @param filePaths Files to keep in the first commit (empty = interactive, but UI always provides paths)
+     * @param description Description for the first commit (null = keep original)
+     * @param parallel Create parallel (sibling) commits instead of parent/child
+     * @return Command result
+     */
+    fun split(
+        revision: Revision = WorkingCopy,
+        filePaths: List<FilePath> = emptyList(),
+        description: Description? = null,
+        parallel: Boolean = false
+    ): CommandResult
+
+    /**
      * List Git remotes.
      * @return Command result with remote names (one per line)
      */
