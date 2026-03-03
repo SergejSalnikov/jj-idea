@@ -63,6 +63,7 @@ class InitAction : DumbAwareAction(
             result
         }.onSuccess {
             project.stateModel.repositoryStates.invalidate()
+            project.stateModel.logRefresh.notify(Unit)
         }.onFailureTellUser("action.init.error", project, log)
             .executeAsync()
     }

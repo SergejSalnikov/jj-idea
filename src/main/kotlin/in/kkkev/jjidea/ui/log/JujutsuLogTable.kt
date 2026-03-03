@@ -103,12 +103,8 @@ class JujutsuLogTable(
     private var pendingSelection: ChangeKey? = null
 
     fun requestSelection(changeKey: ChangeKey) {
-        // Try to select immediately if data is already loaded
-        if (logModel.rowCount > 0 && selectEntry(changeKey.repo, changeKey.revision)) {
-            pendingSelection = null
-            return
-        }
-        // Entry not found yet — store for when data loads via setEntries()
+        // Store for setEntries() to apply after model update.
+        // Don't select eagerly — the current data may be stale (a refresh is likely in flight).
         pendingSelection = changeKey
     }
 
@@ -286,11 +282,11 @@ class JujutsuLogTable(
     val selectedEntries get() = selectedRows.map(::convertRowIndexToModel).mapNotNull(logModel::getEntry)
 
     fun setEntries(entries: List<LogEntry>) {
-        // Only auto-reselect the current entry if no explicit selection was requested
-        // (e.g., via changeSelection.notify after a VCS operation like squash or edit)
+        // Capture current selection for re-selection after model update,
+        // but only if no explicit selection was requested (e.g., via changeSelection after edit/abandon).
         if (pendingSelection == null) {
             selectedEntry?.let {
-                requestSelection(ChangeKey(it.repo, it.id))
+                pendingSelection = ChangeKey(it.repo, it.id)
             }
         }
         logModel.setEntries(entries)

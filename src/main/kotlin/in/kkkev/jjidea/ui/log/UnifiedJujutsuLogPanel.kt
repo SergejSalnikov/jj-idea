@@ -50,11 +50,11 @@ class UnifiedJujutsuLogPanel(private val project: Project) :
     }
 
     private fun setupStateListener() {
-        // Listen for repository state changes to refresh
+        // Listen for log refresh signals (from VCS operations and repositoryStates cascade)
         // (Selection handling is done by the data loader)
         // Note: don't call updateRootFilterVisibility() here — the table still has stale data.
         // onDataLoaded() calls it after the table is updated with fresh data.
-        project.stateModel.repositoryStates.connect(this) { _ ->
+        project.stateModel.logRefresh.connect(this) { _ ->
             refresh()
         }
     }
@@ -63,6 +63,10 @@ class UnifiedJujutsuLogPanel(private val project: Project) :
         logTable.setEntries(data.entries)
         logTable.updateGraph(data.graphNodes)
         updateRootFilterVisibility()
+        // Refresh detail panel with the (possibly updated) selected entry.
+        // fireTableDataChanged() doesn't change the selection, so the ListSelectionListener
+        // won't fire — but the entry data may have changed (e.g., empty flag, file changes).
+        detailsPanel.showCommit(logTable.selectedEntry)
     }
 
     /**

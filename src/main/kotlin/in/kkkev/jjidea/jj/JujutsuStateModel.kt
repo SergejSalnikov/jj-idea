@@ -61,6 +61,17 @@ class JujutsuStateModel(private val project: Project) {
     }
 
     /**
+     * Log refresh notifier. Fires when the log should reload, either because:
+     * - A VCS operation completed (via [JujutsuRepository.invalidate])
+     * - Working copy state changed (cascaded from [repositoryStates])
+     *
+     * The log subscribes to this instead of [repositoryStates] directly, because
+     * [repositoryStates] only tracks the working copy entry and won't fire for
+     * operations on non-working-copy commits (abandon, describe, rebase, etc.).
+     */
+    val logRefresh = simpleNotifier<Unit>(project, "Jujutsu Log Refresh")
+
+    /**
      * Change selection notifier. Actions use this to request a specific change be selected.
      * Log panels and data loaders listen and select the matching entry if it belongs to their repo.
      */
@@ -150,6 +161,7 @@ class JujutsuStateModel(private val project: Project) {
                     dirtyScopeManager.dirDirtyRecursively(entry.repo.directory)
                 }
             }
+            logRefresh.notify(Unit)
         }
     }
 }
@@ -170,6 +182,7 @@ val Project.stateModel: JujutsuStateModel get() = service()
 fun JujutsuRepository.invalidate(select: Revision? = null) {
     val stateModel = project.stateModel
     stateModel.repositoryStates.invalidate()
+    stateModel.logRefresh.notify(Unit)
     if (select != null) {
         stateModel.changeSelection.notify(ChangeKey(this, select))
     }
