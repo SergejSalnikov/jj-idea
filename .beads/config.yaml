@@ -60,3 +60,13 @@
 # - linear.api-key
 # - github.org
 # - github.repo
+
+no-git-ops: true
+
+# Disable automatic git commit/push of backup files
+# In a jj-colocated repo, git commits from beads create unwanted jj changes.
+# We want JSONL export to happen but commit .beads/ changes with source code manually.
+backup:
+  enabled: false
+  git-push: false
+  git-commit: false
