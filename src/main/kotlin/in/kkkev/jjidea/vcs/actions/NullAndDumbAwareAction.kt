@@ -9,8 +9,8 @@ import javax.swing.Icon
 /**
  * A [DumbAwareAction] that acts on a list of objects, and is disabled if that list is empty.
  */
-abstract class EmptyAndDumbAwareAction<T>(val target: List<T>, messageKey: String, icon: Icon) : DumbAwareAction(
-    JujutsuBundle.message(messageKey),
+abstract class EmptyAndDumbAwareAction<T : Any>(val target: List<T>, messageKey: String, icon: Icon) : DumbAwareAction(
+    JujutsuBundle.message(messageKey, *(target as List<Any>).toTypedArray()),
     JujutsuBundle.message("$messageKey.tooltip"),
     icon
 ) {
@@ -24,7 +24,7 @@ abstract class EmptyAndDumbAwareAction<T>(val target: List<T>, messageKey: Strin
 
 data class ActionContext<T>(val target: T, val event: AnActionEvent, val log: Logger)
 
-fun <T> nullAndDumbAwareAction(
+fun <T : Any> nullAndDumbAwareAction(
     target: T?,
     messageKey: String,
     icon: Icon,
@@ -35,7 +35,7 @@ fun <T> nullAndDumbAwareAction(
     override fun actionPerformed(e: AnActionEvent) = action(ActionContext(target!!, e, log))
 }
 
-fun <T> emptyAndDumbAwareAction(
+fun <T : Any> emptyAndDumbAwareAction(
     target: List<T>,
     messageKey: String,
     icon: Icon,
