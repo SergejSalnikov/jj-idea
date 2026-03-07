@@ -51,10 +51,10 @@ class CliExecutorSplitTest {
     @Nested
     inner class `with description` {
         @Test
-        fun `split with -m flag`() {
+        fun `split with message`() {
             val result = splitArgs(revision, description = Description("First half"))
 
-            result shouldBe listOf("split", "-r", "abc123def456", "-m", "First half")
+            result shouldBe listOf("split", "-r", "abc123def456", "--message=First half")
         }
 
         @Test
@@ -65,7 +65,7 @@ class CliExecutorSplitTest {
                 description = Description("Core changes")
             )
 
-            result shouldBe listOf("split", "-r", "abc123def456", "-m", "Core changes", "src/main.kt")
+            result shouldBe listOf("split", "-r", "abc123def456", "--message=Core changes", "src/main.kt")
         }
     }
 
@@ -91,8 +91,7 @@ class CliExecutorSplitTest {
                 "split",
                 "-r",
                 "abc123def456",
-                "-m",
-                "First commit",
+                "--message=First commit",
                 "--parallel",
                 "src/main.kt"
             )

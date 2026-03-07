@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Descriptions starting with hyphens (e.g., markdown bullet points) no longer fail with "unexpected argument" error
+
 ## [0.4.0] - 2026-03-07
 
 ### Added

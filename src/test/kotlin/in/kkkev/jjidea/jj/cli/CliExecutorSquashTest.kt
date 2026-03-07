@@ -51,10 +51,10 @@ class CliExecutorSquashTest {
     @Nested
     inner class `with description` {
         @Test
-        fun `squash with -m flag`() {
+        fun `squash with message`() {
             val result = squashArgs(revision, description = Description("Combined change"))
 
-            result shouldBe listOf("squash", "-r", "abc123def456", "-m", "Combined change")
+            result shouldBe listOf("squash", "-r", "abc123def456", "--message=Combined change")
         }
 
         @Test
@@ -65,7 +65,7 @@ class CliExecutorSquashTest {
                 description = Description("Partial squash")
             )
 
-            result shouldBe listOf("squash", "-r", "abc123def456", "-m", "Partial squash", "src/main.kt")
+            result shouldBe listOf("squash", "-r", "abc123def456", "--message=Partial squash", "src/main.kt")
         }
     }
 
@@ -91,8 +91,7 @@ class CliExecutorSquashTest {
                 "squash",
                 "-r",
                 "abc123def456",
-                "-m",
-                "Combined",
+                "--message=Combined",
                 "--keep-emptied",
                 "src/main.kt"
             )

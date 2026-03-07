@@ -69,8 +69,7 @@ internal fun squashArgs(
     add("-r")
     add(revision.toString())
     if (description != null) {
-        add("-m")
-        add(description.actual)
+        add("--message=${description.actual}")
     }
     if (keepEmptied) add("--keep-emptied")
     addAll(filePaths)
@@ -87,8 +86,7 @@ internal fun splitArgs(
     add("-r")
     add(revision.toString())
     if (description != null) {
-        add("-m")
-        add(description.actual)
+        add("--message=${description.actual}")
     }
     if (parallel) add("--parallel")
     addAll(filePaths)
@@ -156,13 +154,12 @@ class CliExecutor(
         execute(root, listOfNotNull("git", "init", "--colocate".takeIf { colocate }))
 
     override fun describe(description: Description, revision: Revision) =
-        execute(root, listOf("describe", "-r", revision, "-m", description.actual))
+        execute(root, listOf("describe", "-r", revision, "--message=${description.actual}"))
 
     override fun new(description: Description, parentRevisions: List<Revision>): CommandExecutor.CommandResult {
         val args = mutableListOf("new")
         if (!description.empty) {
-            args.add("-m")
-            args.add(description.actual)
+            args.add("--message=${description.actual}")
         }
         args.addAll(parentRevisions.map { it.toString() })
         return execute(root, args)
