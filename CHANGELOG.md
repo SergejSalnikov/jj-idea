@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-03-08
+
 ### Fixed
 - Save all open editor files before executing JJ commands to prevent race conditions with unsaved changes
 - Log now refreshes after abandoning a non-working-copy change, and selects the abandoned change's parent instead of jumping to the working copy
@@ -147,7 +149,8 @@ numerous improvements made during the 0.1.x development cycle.
 - Refactored log tab management
 - Change hashes from change IDs to commit IDs for platform compatibility
 
-[Unreleased]: https://github.com/kkkev/jj-idea/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/kkkev/jj-idea/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/kkkev/jj-idea/releases/tag/v0.4.2
 [0.4.1]: https://github.com/kkkev/jj-idea/releases/tag/v0.4.1
 [0.4.0]: https://github.com/kkkev/jj-idea/releases/tag/v0.4.0
 [0.3.6]: https://github.com/kkkev/jj-idea/releases/tag/v0.3.6
