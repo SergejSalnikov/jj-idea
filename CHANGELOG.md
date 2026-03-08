@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Save all open editor files before executing JJ commands to prevent race conditions with unsaved changes
+
 ## [0.4.1] - 2026-03-08
 
 ### Added

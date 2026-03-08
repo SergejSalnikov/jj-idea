@@ -2,6 +2,7 @@ package `in`.kkkev.jjidea.jj
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
@@ -240,12 +241,14 @@ interface CommandExecutor {
         }
 
         fun executeAsync() {
+            FileDocumentManager.getInstance().saveAllDocuments()
             ApplicationManager.getApplication().executeOnPooledThread {
                 handleResult(commandExecutor.action())
             }
         }
 
         fun executeWithProgress(project: Project, title: String) {
+            FileDocumentManager.getInstance().saveAllDocuments()
             object : Task.Backgroundable(project, title, false) {
                 override fun run(indicator: ProgressIndicator) {
                     indicator.isIndeterminate = true
