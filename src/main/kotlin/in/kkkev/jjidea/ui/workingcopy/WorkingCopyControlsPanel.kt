@@ -13,13 +13,13 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBUI
 import `in`.kkkev.jjidea.JujutsuBundle
+import `in`.kkkev.jjidea.actions.BackgroundActionGroup
+import `in`.kkkev.jjidea.actions.requestDescription
 import `in`.kkkev.jjidea.jj.*
 import `in`.kkkev.jjidea.ui.components.IconAwareHtmlPane
 import `in`.kkkev.jjidea.ui.components.appendParents
 import `in`.kkkev.jjidea.ui.components.appendSummary
 import `in`.kkkev.jjidea.ui.components.htmlString
-import `in`.kkkev.jjidea.vcs.actions.BackgroundActionGroup
-import `in`.kkkev.jjidea.vcs.actions.requestDescription
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout

@@ -5,8 +5,8 @@ import com.intellij.util.ui.CheckboxIcon
 import com.intellij.util.ui.EmptyIcon
 import com.intellij.util.ui.JBUI
 import `in`.kkkev.jjidea.JujutsuBundle
+import `in`.kkkev.jjidea.actions.BackgroundActionGroup
 import `in`.kkkev.jjidea.jj.JujutsuRepository
-import `in`.kkkev.jjidea.vcs.actions.BackgroundActionGroup
 
 /**
  * Filter component for repository roots.

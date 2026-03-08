@@ -3,8 +3,23 @@ package `in`.kkkev.jjidea.ui.log
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.project.Project
+import `in`.kkkev.jjidea.actions.addPopup
+import `in`.kkkev.jjidea.actions.bookmark.createBookmarkAction
+import `in`.kkkev.jjidea.actions.bookmark.deleteBookmarkAction
+import `in`.kkkev.jjidea.actions.bookmark.moveBookmarkAction
+import `in`.kkkev.jjidea.actions.bookmark.renameBookmarkAction
+import `in`.kkkev.jjidea.actions.change.abandonChangeAction
+import `in`.kkkev.jjidea.actions.change.copyDescriptionAction
+import `in`.kkkev.jjidea.actions.change.copyIdAction
+import `in`.kkkev.jjidea.actions.change.describeAction
+import `in`.kkkev.jjidea.actions.change.editChangeAction
+import `in`.kkkev.jjidea.actions.change.newChangeFromAction
+import `in`.kkkev.jjidea.actions.change.rebaseAction
+import `in`.kkkev.jjidea.actions.change.squashAction
+import `in`.kkkev.jjidea.actions.change.squashableEntry
+import `in`.kkkev.jjidea.actions.git.gitFetchAction
+import `in`.kkkev.jjidea.actions.git.gitPushAction
 import `in`.kkkev.jjidea.jj.LogEntry
-import `in`.kkkev.jjidea.vcs.actions.*
 
 /**
  * Context menu actions for the custom Jujutsu log table.

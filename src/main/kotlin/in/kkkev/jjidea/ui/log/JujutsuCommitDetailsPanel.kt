@@ -13,12 +13,12 @@ import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
+import `in`.kkkev.jjidea.actions.JujutsuDataKeys
 import `in`.kkkev.jjidea.jj.ChangeService
 import `in`.kkkev.jjidea.jj.LogEntry
 import `in`.kkkev.jjidea.message
 import `in`.kkkev.jjidea.ui.common.JujutsuChangesTree
 import `in`.kkkev.jjidea.ui.components.*
-import `in`.kkkev.jjidea.vcs.actions.JujutsuDataKeys
 import java.awt.BorderLayout
 import javax.swing.JPanel
 

@@ -6,8 +6,8 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 import `in`.kkkev.jjidea.JujutsuBundle
+import `in`.kkkev.jjidea.actions.BackgroundActionGroup
 import `in`.kkkev.jjidea.jj.ChangeId
-import `in`.kkkev.jjidea.vcs.actions.BackgroundActionGroup
 import javax.swing.Icon
 
 /**

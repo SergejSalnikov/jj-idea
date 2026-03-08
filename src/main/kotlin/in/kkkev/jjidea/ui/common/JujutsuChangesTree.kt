@@ -14,7 +14,7 @@ import com.intellij.openapi.vcs.changes.ui.ChangesGroupingSupport
 import com.intellij.openapi.vcs.changes.ui.ChangesGroupingSupport.Companion.DIRECTORY_GROUPING
 import com.intellij.openapi.vcs.changes.ui.ChangesGroupingSupport.Companion.REPOSITORY_GROUPING
 import com.intellij.openapi.vcs.changes.ui.TreeModelBuilder
-import `in`.kkkev.jjidea.vcs.actions.fileChangeActionGroup
+import `in`.kkkev.jjidea.actions.filechange.fileChangeActionGroup
 import javax.swing.tree.DefaultTreeModel
 
 /**

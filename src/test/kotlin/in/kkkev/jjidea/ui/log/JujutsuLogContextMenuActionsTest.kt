@@ -1,7 +1,7 @@
 package `in`.kkkev.jjidea.ui.log
 
+import `in`.kkkev.jjidea.actions.change.squashableEntry
 import `in`.kkkev.jjidea.jj.*
-import `in`.kkkev.jjidea.vcs.actions.squashableEntry
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe

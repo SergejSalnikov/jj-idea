@@ -4,8 +4,8 @@ import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.fileChooser.FileChooserFactory
 import `in`.kkkev.jjidea.JujutsuBundle
+import `in`.kkkev.jjidea.actions.BackgroundActionGroup
 import `in`.kkkev.jjidea.jj.JujutsuRepository
-import `in`.kkkev.jjidea.vcs.actions.BackgroundActionGroup
 import `in`.kkkev.jjidea.vcs.pathRelativeTo
 
 /**

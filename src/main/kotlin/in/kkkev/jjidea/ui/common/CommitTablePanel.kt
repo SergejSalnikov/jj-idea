@@ -14,9 +14,8 @@ import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SearchTextField
 import com.intellij.ui.components.SearchFieldWithExtension
 import `in`.kkkev.jjidea.JujutsuBundle
+import `in`.kkkev.jjidea.actions.BackgroundActionGroup
 import `in`.kkkev.jjidea.ui.log.*
-import `in`.kkkev.jjidea.vcs.actions.BackgroundActionGroup
-import `in`.kkkev.jjidea.vcs.actions.PopupActionGroup
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.util.function.Supplier
@@ -416,4 +415,15 @@ abstract class CommitTablePanel<D>(
         log.info("Refreshing log entries")
         dataLoader.refresh()
     }
+}
+
+@Suppress("ComponentNotRegistered")
+open class PopupActionGroup(shortNameResourceKey: String, vararg actions: AnAction) :
+    DefaultActionGroup(JujutsuBundle.message(shortNameResourceKey), actions.toList()),
+    ActionUpdateThreadAware.Recursive {
+    init {
+        getTemplatePresentation().isPopupGroup = true
+    }
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 }

@@ -2,7 +2,7 @@ package `in`.kkkev.jjidea.ui.log
 
 import com.intellij.openapi.actionSystem.*
 import `in`.kkkev.jjidea.JujutsuBundle
-import `in`.kkkev.jjidea.vcs.actions.BackgroundActionGroup
+import `in`.kkkev.jjidea.actions.BackgroundActionGroup
 
 /**
  * Filter component for authors.

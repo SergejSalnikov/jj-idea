@@ -40,29 +40,29 @@
     <depends>com.intellij.modules.vcs</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <vcs name="Jujutsu" vcsClass="in.kkkev.jjidea.vcs.JujutsuVcs" administrativeAreaName=".jj" />
+        <vcs name="Jujutsu" vcsClass="in.kkkev.jjidea.vcs.JujutsuVcs" administrativeAreaName=".jj"/>
         <vcsRootChecker implementation="in.kkkev.jjidea.vcs.JujutsuRootChecker" order="first"/>
 
         <!-- Services -->
-        <projectService serviceImplementation="in.kkkev.jjidea.jj.LogCache" />
-        <projectService serviceImplementation="in.kkkev.jjidea.jj.JujutsuStateModel" />
-        <projectService serviceImplementation="in.kkkev.jjidea.ui.log.JujutsuCustomLogTabManager" />
-        <projectService serviceImplementation="in.kkkev.jjidea.ui.history.JujutsuFileHistoryTabManager" />
-        <projectService serviceImplementation="in.kkkev.jjidea.ui.services.ToolWindowEnabler" preload="true" />
-        <projectService serviceImplementation="in.kkkev.jjidea.settings.JujutsuSettings" />
+        <projectService serviceImplementation="in.kkkev.jjidea.jj.LogCache"/>
+        <projectService serviceImplementation="in.kkkev.jjidea.jj.JujutsuStateModel"/>
+        <projectService serviceImplementation="in.kkkev.jjidea.ui.log.JujutsuCustomLogTabManager"/>
+        <projectService serviceImplementation="in.kkkev.jjidea.ui.history.JujutsuFileHistoryTabManager"/>
+        <projectService serviceImplementation="in.kkkev.jjidea.ui.services.ToolWindowEnabler" preload="true"/>
+        <projectService serviceImplementation="in.kkkev.jjidea.settings.JujutsuSettings"/>
 
         <!-- Ignore .jj/ internal files to prevent VcsDirtyScopeVfsListener feedback loops -->
-        <ignoredFileProvider implementation="in.kkkev.jjidea.vcs.changes.JujutsuIgnoredFileProvider" />
+        <ignoredFileProvider implementation="in.kkkev.jjidea.vcs.changes.JujutsuIgnoredFileProvider"/>
 
         <!-- Notifications -->
-        <notificationGroup id="Jujutsu" displayType="BALLOON" />
+        <notificationGroup id="Jujutsu" displayType="BALLOON"/>
 
         <!-- Settings -->
         <projectConfigurable
             id="vcs.Jujutsu"
             displayName="Jujutsu"
             instance="in.kkkev.jjidea.settings.JujutsuConfigurable"
-            parentId="project.propVCSSupport.Mappings" />
+            parentId="project.propVCSSupport.Mappings"/>
 
         <!-- Jujutsu working copy tool window on the left side -->
         <toolWindow
@@ -74,48 +74,53 @@
     </extensions>
 
     <actions>
-        <action id="Jujutsu.Init" class="in.kkkev.jjidea.vcs.actions.InitAction">
+        <action id="Jujutsu.Init" class="in.kkkev.jjidea.actions.top.InitAction">
             <add-to-group group-id="Vcs.Import"/>
-            <add-to-group group-id="Vcs.Operations.Popup.NonVcsAware" relative-to-action="Start.Use.Vcs" anchor="before"/>
+            <add-to-group group-id="Vcs.Operations.Popup.NonVcsAware" relative-to-action="Start.Use.Vcs"
+                          anchor="before"/>
             <add-to-group group-id="Vcs.ToolWindow.CreateRepository"/>
             <override-text place="Vcs.Toolbar.Widget"/>
         </action>
 
-        <action id="Jujutsu.GitFetch" class="in.kkkev.jjidea.vcs.actions.GitFetchAction"/>
-        <action id="Jujutsu.GitPush" class="in.kkkev.jjidea.vcs.actions.GitPushAction"/>
+        <action id="Jujutsu.GitFetch" class="in.kkkev.jjidea.actions.git.GitFetchAction"/>
+        <action id="Jujutsu.GitPush" class="in.kkkev.jjidea.actions.git.GitPushAction"/>
 
         <!-- Open custom Jujutsu log tab -->
         <action id="Jujutsu.OpenLogTab"
-                class="in.kkkev.jjidea.vcs.actions.OpenJujutsuLogTabAction">
+                class="in.kkkev.jjidea.actions.top.OpenJujutsuLogTabAction">
             <!-- Text and description are set in the action class constructor -->
             <!-- Not added to VcsGroup to avoid StandardVcsGroup requirement -->
         </action>
 
         <!-- Show Diff action - defined before EditorGroup so it can be referenced -->
-        <action id="Jujutsu.ShowChangesDiff" class="in.kkkev.jjidea.vcs.actions.ShowChangesDiffAction">
+        <action id="Jujutsu.ShowChangesDiff" class="in.kkkev.jjidea.actions.filechange.ShowChangesDiffAction">
             <keyboard-shortcut first-keystroke="control D" keymap="$default"/>
             <keyboard-shortcut first-keystroke="meta D" keymap="Mac OS X"/>
             <keyboard-shortcut first-keystroke="meta D" keymap="Mac OS X 10.5+"/>
         </action>
 
         <!-- Jujutsu action group in editor context menu -->
-        <group id="Jujutsu.EditorGroup" text="Jujutsu" class="in.kkkev.jjidea.vcs.actions.JujutsuEditorActionGroup" popup="true">
+        <group id="Jujutsu.EditorGroup" text="Jujutsu" class="in.kkkev.jjidea.actions.file.JujutsuEditorActionGroup"
+               popup="true">
             <reference ref="Annotate"/>
             <reference ref="Jujutsu.ShowChangesDiff"/>
-            <action id="Jujutsu.CompareWithBranch" class="in.kkkev.jjidea.vcs.actions.JujutsuCompareWithBranchAction"/>
-            <action id="Jujutsu.ShowFileHistory" class="in.kkkev.jjidea.vcs.actions.ShowJujutsuFileHistoryAction"/>
-            <action id="Jujutsu.ShowHistoryForSelection" class="in.kkkev.jjidea.vcs.actions.JujutsuShowHistoryForSelectionAction"/>
-            <action id="Jujutsu.RestoreFile" class="in.kkkev.jjidea.vcs.actions.RestoreSelectionAction"/>
+            <action id="Jujutsu.CompareWithBranch" class="in.kkkev.jjidea.actions.file.CompareFileWithBranchAction"/>
+            <action id="Jujutsu.ShowFileHistory" class="in.kkkev.jjidea.actions.file.ShowFileHistoryAction"/>
+            <action id="Jujutsu.ShowHistoryForSelection"
+                    class="in.kkkev.jjidea.actions.file.ShowFileHistoryForSelectionAction"/>
+            <action id="Jujutsu.RestoreFile" class="in.kkkev.jjidea.actions.file.RestoreSelectionAction"/>
             <!--<add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorPopupMenu.GoToMenu"/>-->
             <add-to-group group-id="VcsGroup" anchor="last"/>
         </group>
 
         <!-- File change context menu actions for custom panels -->
-        <action id="Jujutsu.OpenChangeFile" class="in.kkkev.jjidea.vcs.actions.OpenChangeFileAction"/>
-        <action id="Jujutsu.RestoreToChange" class="in.kkkev.jjidea.vcs.actions.RestoreToChangeAction"/>
-        <action id="Jujutsu.CompareWithLocal" class="in.kkkev.jjidea.vcs.actions.CompareWithLocalAction"/>
-        <action id="Jujutsu.CompareBeforeWithLocal" class="in.kkkev.jjidea.vcs.actions.CompareBeforeWithLocalAction"/>
-        <action id="Jujutsu.OpenRepositoryVersion" class="in.kkkev.jjidea.vcs.actions.OpenRepositoryVersionAction"/>
+        <action id="Jujutsu.OpenChangeFile" class="in.kkkev.jjidea.actions.filechange.OpenChangeFileAction"/>
+        <action id="Jujutsu.RestoreToChange" class="in.kkkev.jjidea.actions.filechange.RestoreToChangeAction"/>
+        <action id="Jujutsu.CompareWithLocal" class="in.kkkev.jjidea.actions.filechange.CompareWithLocalAction"/>
+        <action id="Jujutsu.CompareBeforeWithLocal"
+                class="in.kkkev.jjidea.actions.filechange.CompareBeforeWithLocalAction"/>
+        <action id="Jujutsu.OpenRepositoryVersion"
+                class="in.kkkev.jjidea.actions.filechange.OpenRepositoryVersionAction"/>
     </actions>
 
 </idea-plugin>

@@ -1,6 +1,7 @@
 package `in`.kkkev.jjidea.vcs.actions
 
 import com.intellij.icons.AllIcons
+import `in`.kkkev.jjidea.actions.EmptyAndDumbAwareAction
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Nested
@@ -20,7 +21,11 @@ class NullAndDumbAwareActionTest {
     inner class `nullAndDumbAwareAction` {
         @Test
         fun `creates action with empty list when target is null`() {
-            val action = nullAndDumbAwareAction<String>(null, "log.action.edit", AllIcons.Actions.Edit) {}
+            val action = `in`.kkkev.jjidea.actions.nullAndDumbAwareAction<String>(
+                null,
+                "log.action.edit",
+                AllIcons.Actions.Edit
+            ) {}
 
             // When target is null, listOfNotNull creates empty list
             action.target shouldBe emptyList()
@@ -28,7 +33,11 @@ class NullAndDumbAwareActionTest {
 
         @Test
         fun `creates action with single-element list when target is non-null`() {
-            val action = nullAndDumbAwareAction("test-value", "log.action.edit", AllIcons.Actions.Edit) {}
+            val action = `in`.kkkev.jjidea.actions.nullAndDumbAwareAction(
+                "test-value",
+                "log.action.edit",
+                AllIcons.Actions.Edit
+            ) {}
 
             // When target is non-null, listOfNotNull creates single-element list
             action.target shouldBe listOf("test-value")
@@ -36,15 +45,21 @@ class NullAndDumbAwareActionTest {
 
         @Test
         fun `action is EmptyAndDumbAwareAction subclass`() {
-            val action = nullAndDumbAwareAction("test", "log.action.edit", AllIcons.Actions.Edit) {}
+            val action =
+                `in`.kkkev.jjidea.actions.nullAndDumbAwareAction("test", "log.action.edit", AllIcons.Actions.Edit) {}
 
             action.shouldBeInstanceOf<EmptyAndDumbAwareAction<String>>()
         }
 
         @Test
         fun `target list empty implies action will be disabled`() {
-            val actionWithNull = nullAndDumbAwareAction<String>(null, "log.action.edit", AllIcons.Actions.Edit) {}
-            val actionWithValue = nullAndDumbAwareAction("value", "log.action.edit", AllIcons.Actions.Edit) {}
+            val actionWithNull = `in`.kkkev.jjidea.actions.nullAndDumbAwareAction<String>(
+                null,
+                "log.action.edit",
+                AllIcons.Actions.Edit
+            ) {}
+            val actionWithValue =
+                `in`.kkkev.jjidea.actions.nullAndDumbAwareAction("value", "log.action.edit", AllIcons.Actions.Edit) {}
 
             // EmptyAndDumbAwareAction.update() disables action when target.isEmpty()
             actionWithNull.target.isEmpty() shouldBe true // will be disabled
@@ -56,7 +71,7 @@ class NullAndDumbAwareActionTest {
     inner class `emptyAndDumbAwareAction` {
         @Test
         fun `creates action with empty list when given empty list`() {
-            val action = emptyAndDumbAwareAction<String>(
+            val action = `in`.kkkev.jjidea.actions.emptyAndDumbAwareAction<String>(
                 emptyList(),
                 "log.action.new.from.plural",
                 AllIcons.General.Add
@@ -69,20 +84,24 @@ class NullAndDumbAwareActionTest {
         @Test
         fun `creates action with provided list when non-empty`() {
             val items = listOf("a", "b", "c")
-            val action = emptyAndDumbAwareAction(items, "log.action.new.from.plural", AllIcons.General.Add) {}
+            val action = `in`.kkkev.jjidea.actions.emptyAndDumbAwareAction(
+                items,
+                "log.action.new.from.plural",
+                AllIcons.General.Add
+            ) {}
 
             action.target shouldBe items
         }
 
         @Test
         fun `target list empty implies action will be disabled`() {
-            val actionEmpty = emptyAndDumbAwareAction<String>(
+            val actionEmpty = `in`.kkkev.jjidea.actions.emptyAndDumbAwareAction<String>(
                 emptyList(),
                 "log.action.new.from.plural",
                 AllIcons.General.Add
             ) {
             }
-            val actionNonEmpty = emptyAndDumbAwareAction(
+            val actionNonEmpty = `in`.kkkev.jjidea.actions.emptyAndDumbAwareAction(
                 listOf("item"),
                 "log.action.new.from.singular",
                 AllIcons.General.Add
@@ -97,7 +116,11 @@ class NullAndDumbAwareActionTest {
         @Test
         fun `preserves list reference`() {
             val items = listOf("x", "y", "z")
-            val action = emptyAndDumbAwareAction(items, "log.action.new.from.plural", AllIcons.General.Add) {}
+            val action = `in`.kkkev.jjidea.actions.emptyAndDumbAwareAction(
+                items,
+                "log.action.new.from.plural",
+                AllIcons.General.Add
+            ) {}
 
             // Should be the same reference
             (action.target === items) shouldBe true
@@ -108,7 +131,7 @@ class NullAndDumbAwareActionTest {
     inner class `ActionContext` {
         @Test
         fun `data class holds target`() {
-            val context = ActionContext("my-target", mockEvent(), mockLogger())
+            val context = `in`.kkkev.jjidea.actions.ActionContext("my-target", mockEvent(), mockLogger())
 
             context.target shouldBe "my-target"
         }
@@ -117,8 +140,8 @@ class NullAndDumbAwareActionTest {
         fun `data class equality works`() {
             val event = mockEvent()
             val logger = mockLogger()
-            val context1 = ActionContext("target", event, logger)
-            val context2 = ActionContext("target", event, logger)
+            val context1 = `in`.kkkev.jjidea.actions.ActionContext("target", event, logger)
+            val context2 = `in`.kkkev.jjidea.actions.ActionContext("target", event, logger)
 
             context1 shouldBe context2
         }
