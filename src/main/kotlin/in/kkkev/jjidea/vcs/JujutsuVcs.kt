@@ -76,6 +76,7 @@ class JujutsuVcs(project: Project) : AbstractVcs(project, VCS_NAME) {
 
     companion object {
         const val VCS_NAME = "Jujutsu"
+        const val DOT_JJ = ".jj"
 
         private val log = Logger.getInstance(JujutsuVcs::class.java)
 

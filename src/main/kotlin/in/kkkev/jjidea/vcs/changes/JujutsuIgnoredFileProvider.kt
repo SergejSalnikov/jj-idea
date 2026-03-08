@@ -6,6 +6,7 @@ import com.intellij.openapi.vcs.changes.IgnoredBeanFactory
 import com.intellij.openapi.vcs.changes.IgnoredFileDescriptor
 import com.intellij.openapi.vcs.changes.IgnoredFileProvider
 import `in`.kkkev.jjidea.jj.stateModel
+import `in`.kkkev.jjidea.vcs.JujutsuVcs.Companion.DOT_JJ
 
 /**
  * Tells the platform to treat `.jj/` internal directories as ignored.
@@ -17,12 +18,12 @@ import `in`.kkkev.jjidea.jj.stateModel
 class JujutsuIgnoredFileProvider : IgnoredFileProvider {
     override fun isIgnoredFile(project: Project, filePath: FilePath): Boolean {
         val path = filePath.path
-        return path.contains("/.jj/") || path.endsWith("/.jj")
+        return path.contains("/$DOT_JJ/") || path.endsWith("/$DOT_JJ")
     }
 
     override fun getIgnoredFiles(project: Project): Set<IgnoredFileDescriptor> =
         project.stateModel.initializedRoots.value.map { repo ->
-            IgnoredBeanFactory.ignoreUnderDirectory(repo.directory.path + "/.jj", project)
+            IgnoredBeanFactory.ignoreUnderDirectory(repo.directory.path + "/$DOT_JJ", project)
         }.toSet()
 
     override fun getIgnoredGroupDescription() = "Jujutsu internal files"

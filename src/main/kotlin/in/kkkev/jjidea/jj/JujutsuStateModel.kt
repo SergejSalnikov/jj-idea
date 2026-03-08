@@ -18,6 +18,7 @@ import com.intellij.util.Alarm
 import `in`.kkkev.jjidea.jj.util.notifiableState
 import `in`.kkkev.jjidea.jj.util.simpleNotifier
 import `in`.kkkev.jjidea.ui.workingcopy.WorkingCopyToolWindowFactory
+import `in`.kkkev.jjidea.vcs.JujutsuVcs.Companion.DOT_JJ
 import `in`.kkkev.jjidea.vcs.jujutsuRepositories
 
 /**
@@ -124,12 +125,12 @@ class JujutsuStateModel(private val project: Project) {
 
                 private fun isUnderJjDirectory(file: VirtualFile, repos: Set<JujutsuRepository>): Boolean =
                     repos.any { repo ->
-                        repo.directory.findChild(".jj")?.let { VfsUtil.isAncestor(it, file, false) } ?: false
+                        repo.directory.findChild(DOT_JJ)?.let { VfsUtil.isAncestor(it, file, false) } ?: false
                     }
 
                 private fun isJjDirectoryEvent(event: VFileEvent): Boolean {
                     val name = event.file?.name ?: event.path.substringAfterLast('/')
-                    return name == ".jj" && (event is VFileCreateEvent || event is VFileDeleteEvent)
+                    return name == DOT_JJ && (event is VFileCreateEvent || event is VFileDeleteEvent)
                 }
             }
         )

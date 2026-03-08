@@ -123,4 +123,9 @@
                 class="in.kkkev.jjidea.actions.filechange.OpenRepositoryVersionAction"/>
     </actions>
 
+    <applicationListeners>
+        <listener class="in.kkkev.jjidea.JujutsuFileTypeSetup"
+                  topic="com.intellij.ide.AppLifecycleListener"/>
+    </applicationListeners>
+
 </idea-plugin>

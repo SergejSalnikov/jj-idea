@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Hide `.jj` directory from Project tool window (added to IDE ignored files list on startup)
+
 ### Fixed
 - Descriptions starting with hyphens (e.g., markdown bullet points) no longer fail with "unexpected argument" error
 

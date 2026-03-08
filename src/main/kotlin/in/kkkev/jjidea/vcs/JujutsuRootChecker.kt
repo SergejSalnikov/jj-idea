@@ -13,14 +13,14 @@ class JujutsuRootChecker : VcsRootChecker() {
 
     override fun isRoot(path: VirtualFile) = isJujutsuRoot(path)
 
-    override fun isVcsDir(dirName: String) = dirName == ".jj"
+    override fun isVcsDir(dirName: String) = dirName == JujutsuVcs.DOT_JJ
 
     companion object {
         /**
          * Check if the given directory is a jujutsu repository root.
          * Uses file system directly to avoid VFS cache staleness issues.
          */
-        fun isJujutsuRoot(dir: VirtualFile) = File(dir.path, ".jj").isDirectory
+        fun isJujutsuRoot(dir: VirtualFile) = File(dir.path, JujutsuVcs.DOT_JJ).isDirectory
 
         /**
          * Search upward from the given directory to find the JJ repository root.
