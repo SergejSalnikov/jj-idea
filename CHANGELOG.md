@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Save all open editor files before executing JJ commands to prevent race conditions with unsaved changes
+- Log now refreshes after abandoning a non-working-copy change, and selects the abandoned change's parent instead of jumping to the working copy
 
 ## [0.4.1] - 2026-03-08
 

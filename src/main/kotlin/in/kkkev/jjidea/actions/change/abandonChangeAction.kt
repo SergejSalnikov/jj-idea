@@ -6,6 +6,7 @@ import com.intellij.openapi.ui.Messages
 import `in`.kkkev.jjidea.JujutsuBundle
 import `in`.kkkev.jjidea.actions.nullAndDumbAwareAction
 import `in`.kkkev.jjidea.jj.LogEntry
+import `in`.kkkev.jjidea.jj.Revision
 import `in`.kkkev.jjidea.jj.WorkingCopy
 import `in`.kkkev.jjidea.jj.invalidate
 
@@ -43,12 +44,14 @@ fun abandonChangeAction(project: Project, entry: LogEntry?) = nullAndDumbAwareAc
         }
     }
 
-    // Execute abandon in background thread
+    // Select a parent after abandon; if abandoning the WC, jj creates a new one automatically
     val repo = target.repo
+    val selectAfter: Revision =
+        if (target.isWorkingCopy) WorkingCopy else target.parentIds.firstOrNull() ?: WorkingCopy
+
     repo.commandExecutor.createCommand { abandon(target.id) }
         .onSuccess {
-            // Select the working copy (may have changed if we abandoned the old working copy)
-            repo.invalidate(select = WorkingCopy)
+            repo.invalidate(select = selectAfter)
             log.info("Abandoned change ${target.id}")
         }.onFailure { tellUser(project, "log.action.abandon.error") }
         .executeAsync()
