@@ -1,58 +1,83 @@
 # Jujutsu VCS Plugin for IntelliJ IDEA
 
-A plugin that integrates [Jujutsu](https://github.com/martinvonz/jj) version control system with IntelliJ IDEA.
+Native IntelliJ integration for [Jujutsu (jj)](https://jj-vcs.github.io/jj/), a Git-compatible version control system built around a fundamentally different workflow: your working copy is always a commit.
 
-## Features (MVP)
+![Custom log view with commit graph and tooltip](docs/images/log-light-with-tooltip.png)
 
-- **Working Copy Status**: View changed, added, and deleted files in your working copy
-- **Diff Viewer**: View diffs for modified files
-- **VCS Root Detection**: Automatically detects jujutsu repositories (`.jj` directory)
-- **Read-only Operations**: Safe exploration of your repository state
+## Features
+
+- **Describe-First Workflow** — The Working Copy tool window lets you describe your current work and create new changes with one click. No staging area, no "WIP" commits.
+- **Custom Log View** — Visual commit graph with inline change IDs, descriptions, bookmarks, and author info. Filter by text, branch, author, or date range.
+- **Change Operations** — Edit, abandon, describe, squash, and rebase changes directly from the log context menu.
+- **Rebase** — Full rebase dialog with source mode selection (-r/-s/-b), visual destination picker with commit graph, and live preview.
+- **Git Remotes** — Fetch and push to Git remotes without leaving the IDE.
+- **File History & Annotations** — Full file history with diff viewer. Line-by-line blame annotations.
+- **Multi-Repository Support** — Work with multiple JJ repositories in a single project with a unified log view.
+- **Real-Time Status** — Auto-refresh keeps the UI in sync as you edit files.
+
+### Working Copy
+
+The Working Copy panel sits on the left side of the IDE, showing changed files grouped by directory with status coloring. Describe your work and create new changes without leaving your editor.
+
+![Working copy panel](docs/images/working-copy-light.png)
+
+### Log View
+
+The custom log replaces the standard VCS log with a JJ-native view. Hover over any commit for details, or right-click for operations.
+
+![Log with context menu](docs/images/log-light-with-menu.png)
+
+Works in both light and dark themes:
+
+![Log view in dark theme](docs/images/log-dark-with-tooltip.png)
+
+### Rebase Dialog
+
+Visual rebase with source mode selection, searchable destination picker, and a live preview showing the result before you commit to it.
+
+![Rebase dialog with live preview](docs/images/rebase-light.png)
 
 ## Installing
 
-### Option 1: From Custom Repository (Recommended - Auto Updates)
+### From Custom Repository (Recommended)
 
-1. In IntelliJ IDEA: **Settings → Plugins → ⚙️ (gear icon) → Manage Plugin Repositories**
-2. Click **+** and add: `https://raw.githubusercontent.com/kkkev/jj-idea/master/updatePlugins.xml`
-3. Click **OK**
-4. Search for "Jujutsu VCS Integration" in the Marketplace tab
-5. Click **Install**
+1. In IntelliJ IDEA: **Settings → Plugins → ⚙️ → Manage Plugin Repositories**
+2. Add: `https://raw.githubusercontent.com/kkkev/jj-idea/master/updatePlugins.xml`
+3. Search for "Jujutsu VCS Integration" in the Marketplace tab and install
 
-Future updates will be automatically detected and available through the normal plugin update mechanism.
+Future updates will be detected automatically.
 
-### Option 2: From GitHub Releases
+### From GitHub Releases
 
 1. Go to [Releases](https://github.com/kkkev/jj-idea/releases)
 2. Download the latest `.zip` file
 3. In IntelliJ IDEA: **Settings → Plugins → ⚙️ → Install Plugin from Disk**
-4. Select the downloaded ZIP file
 
-### Option 3: Build from Source
+### Build from Source
 
-1. Build the plugin: `./gradlew buildPlugin`
-2. In IntelliJ IDEA: **Settings → Plugins → Install Plugin from Disk**
-3. Select the generated ZIP file from `build/distributions/`
+```bash
+./gradlew buildPlugin
+```
 
-## Using the Plugin
-
-1. Open a project that contains a jujutsu repository (has a `.jj` directory)
-2. The plugin will automatically detect the VCS root
-3. Enable Jujutsu VCS for your project: Settings → Version Control → Directory Mappings
-4. View changes in the "Commit" or "Version Control" tool window
+Then install from `build/distributions/` via **Settings → Plugins → Install Plugin from Disk**.
 
 ## Requirements
 
 - IntelliJ IDEA 2025.2 or later
-- Jujutsu (`jj`) installed and available in PATH
-- Java 21 or later
-- Gradle 8.13 or later (included via wrapper)
+- [Jujutsu](https://jj-vcs.github.io/jj/latest/install/) (`jj`) installed and available in PATH
+
+## Getting Started
+
+1. Open a project with a `.jj` directory, or create one with **VCS → Create JJ Repository**
+2. The Working Copy panel appears on the left; the Jujutsu log appears in the Version Control tool window
+3. Configure settings at **Settings → Version Control → Jujutsu**
 
 ## Documentation
 
-- **[Developer Guide](CLAUDE.md)** - Complete project documentation and architecture
-- **[VCS API Reference](docs/VCS_API_REFERENCE.md)** - IntelliJ VCS integration reference
+- **[Contributing](contributing.md)** — Development guidelines
+- **[Developer Guide](CLAUDE.md)** — Architecture and implementation details
+- **[VCS API Reference](docs/VCS_API_REFERENCE.md)** — IntelliJ VCS integration reference
 
-## Contributing
+## License
 
-See [contributing.md](contributing.md) for development guidelines.
+[Apache License 2.0](LICENSE)
