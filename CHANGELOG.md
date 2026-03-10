@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Clicking on change ids in working copy and description panels selects the change in the log
+
 ### Fixed
 - Performance: Remove double refreshing of the log per VCS operation
 - Performance: Remove wasted initial load of repository state

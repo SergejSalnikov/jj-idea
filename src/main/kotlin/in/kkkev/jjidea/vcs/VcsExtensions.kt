@@ -85,7 +85,7 @@ val FilePath.possibleJujutsuProject: Project?
     get() {
         // Search up the directory structure, as this path may represent a deleted file
         var path: FilePath? = this
-        var file: VirtualFile? = null
+        var file: VirtualFile? = virtualFile
         while ((file == null) && (path != null)) {
             path = path.parentPath
             file = path?.virtualFile

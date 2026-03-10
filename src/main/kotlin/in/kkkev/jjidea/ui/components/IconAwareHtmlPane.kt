@@ -6,14 +6,22 @@ import com.intellij.ui.components.JBHtmlPane
 import com.intellij.ui.components.JBHtmlPaneConfiguration
 import com.intellij.ui.components.JBHtmlPaneStyleConfiguration
 import com.intellij.util.ui.UIUtil
+import com.intellij.vcsUtil.VcsUtil
+import `in`.kkkev.jjidea.jj.ChangeId
+import `in`.kkkev.jjidea.jj.invalidate
 import `in`.kkkev.jjidea.ui.common.JujutsuIcons
+import `in`.kkkev.jjidea.vcs.jujutsuRepository
 import java.awt.Color
 import java.awt.Component
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.image.BufferedImage
+import java.util.regex.Pattern
 import javax.swing.Icon
+import javax.swing.event.HyperlinkEvent
 import kotlin.reflect.KClass
+
+private val CHANGE_ID_URL_PARSER = Pattern.compile("^jjc://([^?]+)\\?(.+)$")
 
 /**
  * An HTML pane that can resolve icons from a set of icon libraries, including IDEA's icons
@@ -25,6 +33,17 @@ class IconAwareHtmlPane : JBHtmlPane(
 ) {
     init {
         isOpaque = false
+        addHyperlinkListener { e ->
+            if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
+                with(CHANGE_ID_URL_PARSER.matcher(e.description)) {
+                    if (matches()) {
+                        VcsUtil.getFilePath(this.group(1), true)
+                            .jujutsuRepository
+                            .invalidate(ChangeId(this.group(2)))
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -58,7 +77,8 @@ object IconResolver {
  * Caches the rendered result by scale factor for HiDPI support.
  */
 private class ColoredIcon(private val source: Icon, private val color: Color) : Icon {
-    @Volatile private var cached: Pair<Double, BufferedImage>? = null
+    @Volatile
+    private var cached: Pair<Double, BufferedImage>? = null
 
     override fun paintIcon(c: Component?, g: Graphics, x: Int, y: Int) {
         val g2 = g as Graphics2D

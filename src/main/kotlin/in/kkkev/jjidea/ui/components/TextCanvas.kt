@@ -95,6 +95,18 @@ fun TextCanvas.append(changeId: ChangeId) {
     changeId.offset?.let { smaller { bold { colored(JujutsuColors.DIVERGENT) { append(changeId.optionalOffset) } } } }
 }
 
+fun TextCanvas.append(changeKey: ChangeKey) {
+    linked(URI("jjc://${changeKey.repo.directory.path}?${changeKey.revision}")) {
+        with(changeKey.revision) {
+            when (this) {
+                is ChangeId -> append(this)
+                is Bookmark -> append(this)
+                else -> append(this.toString())
+            }
+        }
+    }
+}
+
 fun TextCanvas.append(description: Description) {
     if (description.empty) {
         grey { italic { append(description.display) } }
@@ -186,7 +198,7 @@ fun TextCanvas.appendBookmarks(entry: LogEntry, suffix: String = "") =
 fun TextCanvas.appendParents(entry: LogEntry) = smaller {
     if (entry.parentIds.isNotEmpty()) {
         append(message("details.parents.label"))
-        append(entry.parentIds, partBuilder = TextCanvas::append)
+        append(entry.parentIds.map { ChangeKey(entry.repo, it) }, partBuilder = TextCanvas::append, prefix = " ")
     } else {
         append(message("details.parents.none"))
     }
