@@ -7,7 +7,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.ProjectLevelVcsManager
-import com.intellij.openapi.vcs.VcsListener
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentManagerEvent
 import com.intellij.ui.content.ContentManagerListener
@@ -33,15 +32,6 @@ class ToolWindowEnabler(private val project: Project) : Disposable {
     private var suppressorListener: ContentManagerListener? = null
 
     init {
-        // Subscribe to VCS configuration changes
-        project.messageBus.connect(this).subscribe(
-            ProjectLevelVcsManager.VCS_CONFIGURATION_CHANGED,
-            VcsListener {
-                log.debug("VCS configuration changed")
-                project.stateModel.initializedRoots.invalidate()
-            }
-        )
-
         // React to initializedRoots changes (init() already calls invalidate(),
         // and connect() fires immediately if the value has loaded)
         project.stateModel.initializedRoots.connect(this) { jjRoots ->

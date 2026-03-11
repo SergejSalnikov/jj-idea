@@ -31,6 +31,25 @@ fun <T : Any> notifiableState(
 ): NotifiableState<T> =
     SimpleNotifiableState(project, topicDisplayName, startValue, equalityCheck, loader)
 
+/**
+ * A state holder that loads its value on a background thread and notifies listeners on EDT when it changes.
+ *
+ * ## Threading Contract
+ * - [invalidate] is safe to call from any thread. It schedules [loader] on a pooled thread.
+ * - [loader] runs on a pooled background thread.
+ * - [Listener.changed] is called on EDT via [ApplicationManager.getApplication().invokeLater].
+ * - [value] is `@Volatile` and can be read from any thread (returns the last successfully loaded value).
+ *
+ * ## Versioning
+ * Each [invalidate] call bumps an [AtomicInteger] version counter. If a newer invalidation arrives
+ * before the loader completes, the stale result is discarded. This means rapid invalidations
+ * naturally coalesce to the latest value without explicit debouncing.
+ *
+ * ## Initialization
+ * Does NOT auto-invalidate on construction. Callers must call [invalidate] explicitly to trigger the
+ * first load. This avoids wasted loads when downstream states depend on upstream state that hasn't
+ * loaded yet (e.g., repositoryStates depends on initializedRoots).
+ */
 class SimpleNotifiableState<T : Any>(
     val project: Project,
     val topicDisplayName: String,
@@ -53,10 +72,6 @@ class SimpleNotifiableState<T : Any>(
 
     @Volatile
     override var value: T = startValue
-
-    init {
-        invalidate()
-    }
 
     override fun invalidate() {
         val myVersion = version.incrementAndGet()

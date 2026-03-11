@@ -392,12 +392,18 @@ Uses `++` concatenation (not `separate()`) in JJ templates because `separate()` 
 `UnifiedJujutsuLogDataLoader` loads all repos in parallel via `CountDownLatch(repos.size)` + `ConcurrentHashMap`. Results merge by timestamp: `flatten().sortedByDescending { authorTimestamp ?: committerTimestamp }`. Every `LogEntry` carries its `JujutsuRepository` reference; selection matching in multi-root mode requires both `repo` and `revision` to prevent cross-repo mismatches. The root gutter column and root filter auto-hide for single-root projects.
 
 **State Management & Reactive Refresh** (`JujutsuStateModel.kt`, `Messaging.kt`):
-`JujutsuStateModel` (project-level `@Service`) provides:
-1. `initializedRoots: NotifiableState<Set<JujutsuRepository>>` — cached roots with `.jj` dirs, invalidated by `BulkFileListener`
+`JujutsuStateModel` (project-level `@Service`) is the central event hub. All IDE event subscriptions
+(VFS changes, VCS configuration, VCS activation) live here. It provides:
+1. `initializedRoots: NotifiableState<Set<JujutsuRepository>>` — cached roots with `.jj` dirs
 2. `repositoryStates: NotifiableState<Set<LogEntry>>` — working copy entries per root, cascades from `initializedRoots`
-3. `changeSelection: Notifier<ChangeKey>` — fire-and-forget selection requests
+3. `logRefresh: Notifier<Unit>` — fires when log should reload (from exactly 3 non-overlapping sources: `repo.invalidate()`, debounce collector, `initializedRoots` handler)
+4. `changeSelection: Notifier<ChangeKey>` — fire-and-forget selection requests
 
-`NotifiableState<T>` wraps `MessageBus` topics: `invalidate()` runs a loader on a pooled thread; if the value changes, publishes on EDT. File changes trigger `repositoryStates.invalidate()` with a 300ms debounce via `Alarm`. Cascading: `initializedRoots` → `repositoryStates` → `VcsDirtyScopeManager.dirDirtyRecursively()`.
+`NotifiableState<T>` wraps `MessageBus` topics: `invalidate()` runs a loader on a pooled thread; if the value changes, publishes on EDT. Does NOT auto-invalidate on construction — callers must call `invalidate()` explicitly. File changes trigger `repositoryStates.invalidate()` with a 300ms debounce via `MutableSharedFlow`. Cascading: `initializedRoots` → `repositoryStates` + `logRefresh` → `VcsDirtyScopeManager.dirDirtyRecursively()`.
+
+**Bootstrap chain**: `JujutsuStartupActivity` → `ToolWindowEnabler.getInstance()` → `JujutsuStateModel` (via `stateModel`) → subscribes to VFS/VCS events, fires initial `initializedRoots.invalidate()` → `ToolWindowEnabler` connects to root state for tool window visibility and log tab suppression.
+
+**Refresh suppression**: `suppressRefresh()`/`resumeRefresh()` bracket batch operations to avoid redundant file-change refreshes. `resumeRefresh()` triggers a refresh when the counter reaches zero.
 
 Both data loaders use a **pending selection** pattern (volatile `pendingSelection` + `hasPendingSelection` flags) to defer selection requests that arrive during background loading, resolving the race between VCS operation completion and refresh data arrival.
 

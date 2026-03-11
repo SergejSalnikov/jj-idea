@@ -43,8 +43,8 @@
         <vcs name="Jujutsu" vcsClass="in.kkkev.jjidea.vcs.JujutsuVcs" administrativeAreaName=".jj"/>
         <vcsRootChecker implementation="in.kkkev.jjidea.vcs.JujutsuRootChecker" order="first"/>
 
-        <!-- Initialize ToolWindowEnabler on project open (replaces deprecated preload="true") -->
-        <postStartupActivity implementation="in.kkkev.jjidea.ui.services.ToolWindowEnablerInitActivity"/>
+        <!-- Bootstrap state model and tool window management on project open -->
+        <postStartupActivity implementation="in.kkkev.jjidea.ui.services.JujutsuStartupActivity"/>
 
         <!-- Ignore .jj/ internal files to prevent VcsDirtyScopeVfsListener feedback loops -->
         <ignoredFileProvider implementation="in.kkkev.jjidea.vcs.changes.JujutsuIgnoredFileProvider"/>

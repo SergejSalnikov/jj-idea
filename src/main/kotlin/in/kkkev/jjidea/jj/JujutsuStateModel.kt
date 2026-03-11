@@ -5,7 +5,11 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vcs.ProjectLevelVcsManager
+import com.intellij.openapi.vcs.VcsListener
 import com.intellij.openapi.vcs.changes.VcsDirtyScopeManager
+import com.intellij.openapi.vcs.ex.ProjectLevelVcsManagerEx
+import com.intellij.openapi.vcs.ex.VcsActivationListener
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -14,23 +18,58 @@ import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.Alarm
 import `in`.kkkev.jjidea.jj.util.notifiableState
 import `in`.kkkev.jjidea.jj.util.simpleNotifier
-import `in`.kkkev.jjidea.ui.workingcopy.WorkingCopyToolWindowFactory
 import `in`.kkkev.jjidea.vcs.JujutsuVcs.Companion.DOT_JJ
 import `in`.kkkev.jjidea.vcs.jujutsuRepositories
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Central state model for Jujutsu VCS data.
- * Implements MVC pattern: this is the Model that views observe.
  *
- * Holds current VCS state and notifies observers via MessageBus when state changes.
+ * ## Architecture
+ *
+ * ```
+ * IDE Events (all subscribed here):
+ *   VFS_CHANGES (.jj create/delete) ──┐
+ *   VCS_CONFIGURATION_CHANGED ────────┼──→ initializedRoots.invalidate()
+ *   VCS_ACTIVATED ────────────────────┘        │
+ *                                              ├──→ repositoryStates.invalidate()
+ *                                              ├──→ logRefresh.notify()
+ *                                              └──→ ToolWindowEnabler
+ *
+ *   VFS_CHANGES (file content) ──→ 300ms debounce ──→ repositoryStates.invalidate()
+ *                                                     + logRefresh.notify()
+ *
+ *   repo.invalidate(select) ──→ repositoryStates.invalidate()
+ *     (VCS operations)          + logRefresh.notify()
+ *                               + changeSelection.notify()
+ * ```
+ *
+ * ## Threading
+ *
+ * - [NotifiableState.invalidate]: safe from any thread; loader runs on pooled thread
+ * - [NotifiableState.Listener]: called on EDT via [com.intellij.openapi.application.ApplicationManager.invokeLater]
+ * - [Notifier.notify]: posts to EDT
+ * - BulkFileListener: called on VFS thread (background)
+ *
+ * ## Initialization Order
+ *
+ * 1. Constructor registers all subscriptions (VFS, VCS config, VCS activated)
+ * 2. Explicit [initializedRoots.invalidate] fires initial root scan
+ * 3. initializedRoots cascade → repositoryStates + logRefresh
+ * 4. ToolWindowEnabler connects to initializedRoots separately
+ *
+ * Note: [SimpleNotifiableState] does NOT auto-invalidate on construction.
+ * Callers must call [invalidate] explicitly to trigger the first load.
  */
 @Service(Service.Level.PROJECT)
 class JujutsuStateModel(private val project: Project) : Disposable {
     private val log = Logger.getInstance(javaClass)
+
+    /** Counter for [suppressRefresh]/[resumeRefresh]. When > 0, file-change refreshes are suppressed. */
+    private val refreshSuppression = AtomicInteger(0)
 
     /**
      * Set of VCS-configured JJ roots that are actually initialized (have .jj directory).
@@ -81,9 +120,35 @@ class JujutsuStateModel(private val project: Project) : Disposable {
 
     private val repositoryStateAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, this)
 
+    /** Suppress file-change refreshes (e.g., during batch operations). Pairs with [resumeRefresh]. */
+    fun suppressRefresh() {
+        refreshSuppression.incrementAndGet()
+    }
+
+    /** Resume file-change refreshes after [suppressRefresh]. Triggers a refresh if the counter reaches zero. */
+    fun resumeRefresh() {
+        if (refreshSuppression.decrementAndGet() <= 0) {
+            scheduleRepositoryRefresh()
+        }
+    }
+
+    private fun scheduleRepositoryRefresh() {
+        repositoryStateAlarm.cancelAllRequests()
+        repositoryStateAlarm.addRequest({
+            repositoryStates.invalidate()
+            logRefresh.notify(Unit)
+        }, 300)
+    }
+
     init {
+        // Fire off an initial invalidation of repository roots to transition from empty to the actual roots - so that
+        // initial state is initialised in all listeners
+        initializedRoots.invalidate()
+
+        val connection = project.messageBus.connect(this)
+
         // Watch for file changes to mark files dirty and detect .jj directory changes
-        project.messageBus.connect(this).subscribe(
+        connection.subscribe(
             VirtualFileManager.VFS_CHANGES,
             object : BulkFileListener {
                 override fun after(events: List<VFileEvent>) {
@@ -115,18 +180,22 @@ class JujutsuStateModel(private val project: Project) : Disposable {
                     }
 
                     if (hasRepoChanges) {
+                        if (refreshSuppression.get() > 0) {
+                            log.info("File changes detected but refresh suppressed, skipping")
+                            return
+                        }
                         log.info(
                             "File changes detected (${events.size} events on " +
                                 "${Thread.currentThread().name}), scheduling repositoryStates invalidation"
                         )
-                        repositoryStateAlarm.cancelAllRequests()
-                        repositoryStateAlarm.addRequest({ repositoryStates.invalidate() }, 300)
+                        scheduleRepositoryRefresh()
                     }
                 }
 
-                private fun isUnderJjDirectory(file: VirtualFile, repos: Set<JujutsuRepository>): Boolean =
+                private fun isUnderJjDirectory(file: VirtualFile, repos: Set<JujutsuRepository>) =
                     repos.any { repo ->
-                        repo.directory.findChild(DOT_JJ)?.let { VfsUtil.isAncestor(it, file, false) } ?: false
+                        repo.directory.findChild(DOT_JJ)
+                            ?.let { VfsUtil.isAncestor(it, file, false) } ?: false
                     }
 
                 private fun isJjDirectoryEvent(event: VFileEvent): Boolean {
@@ -136,16 +205,29 @@ class JujutsuStateModel(private val project: Project) : Disposable {
             }
         )
 
-        // Update tool window availability when initializedRoots changes
-        // Also invalidate repositoryStates since it depends on initializedRoots
+        // Subscribe to VCS configuration changes
+        connection.subscribe(
+            ProjectLevelVcsManager.VCS_CONFIGURATION_CHANGED,
+            VcsListener {
+                log.debug("VCS configuration changed")
+                initializedRoots.invalidate()
+            }
+        )
+        connection.subscribe(
+            ProjectLevelVcsManagerEx.VCS_ACTIVATED,
+            VcsActivationListener {
+                log.debug("VCS activated")
+                initializedRoots.invalidate()
+            }
+        )
+
+        // Invalidate repositoryStates since it depends on initializedRoots
         initializedRoots.connect(this) { new ->
             log.info("Initialized roots changed to ${new.size} roots")
-            ToolWindowManager.getInstance(project)
-                .getToolWindow(WorkingCopyToolWindowFactory.TOOL_WINDOW_ID)
-                ?.isAvailable = new.isNotEmpty()
-
             // Reload repository states now that we have the current roots
             repositoryStates.invalidate()
+            // Also reload the log
+            logRefresh.notify(Unit)
         }
 
         // When repository states change (VCS operations completed), mark directories dirty
@@ -163,7 +245,6 @@ class JujutsuStateModel(private val project: Project) : Disposable {
                     dirtyScopeManager.dirDirtyRecursively(entry.repo.directory)
                 }
             }
-            logRefresh.notify(Unit)
         }
     }
 
