@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Show history for selection: fix AssertionError caused by missing block history provider
+- Remove deprecated/252-only API usages (ActionUtil.performAction, Disposer.isDisposed)
+
+### Changed
+- Minimum supported version lowered back to IntelliJ IDEA 2025.1
+
 ## [0.5.3] - 2026-03-18
 
 ### Added

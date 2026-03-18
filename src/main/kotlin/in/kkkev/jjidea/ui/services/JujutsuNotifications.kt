@@ -4,12 +4,15 @@ import com.intellij.notification.Notification
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.*
-import com.intellij.openapi.actionSystem.ex.ActionUtil
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.CustomizedDataContext
+import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import `in`.kkkev.jjidea.JujutsuBundle
+import `in`.kkkev.jjidea.actions.performAction
 import `in`.kkkev.jjidea.jj.JujutsuRepository
 import java.util.concurrent.ConcurrentHashMap
 
@@ -51,12 +54,7 @@ object JujutsuNotifications {
             override fun actionPerformed(e: AnActionEvent, notification: Notification) {
                 notification.expire()
                 notifiedUninitializedRoots.remove(rootPath)
-
-                // Invoke the registered Init action with directory context
-                val initAction = ActionManager.getInstance().getAction("Jujutsu.Init")!!
-                val context = createDataContext(project, repo.directory)
-                val event = AnActionEvent.createEvent(initAction, context, null, "", ActionUiKind.NONE, null)
-                ActionUtil.performAction(initAction, event)
+                performAction("Jujutsu.Init", createDataContext(project, repo.directory))
             }
         })
 

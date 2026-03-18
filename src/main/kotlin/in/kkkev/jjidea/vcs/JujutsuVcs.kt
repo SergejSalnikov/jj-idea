@@ -30,6 +30,8 @@ class JujutsuVcs(project: Project) : AbstractVcs(project, VCS_NAME) {
 
     override fun getVcsHistoryProvider() = lazyHistoryProvider
 
+    override fun getVcsBlockHistoryProvider() = lazyHistoryProvider
+
     override fun getAnnotationProvider() = lazyAnnotationProvider
 
     override fun getDisplayName(): String = JujutsuBundle.message("vcs.displayname")

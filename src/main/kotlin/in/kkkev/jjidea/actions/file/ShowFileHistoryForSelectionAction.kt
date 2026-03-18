@@ -1,15 +1,14 @@
 package `in`.kkkev.jjidea.actions.file
 
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbAwareAction
 import `in`.kkkev.jjidea.JujutsuBundle
 import `in`.kkkev.jjidea.actions.editor
 import `in`.kkkev.jjidea.actions.file
+import `in`.kkkev.jjidea.actions.performAction
 import `in`.kkkev.jjidea.vcs.isJujutsu
 
 /**
@@ -32,8 +31,7 @@ class ShowFileHistoryForSelectionAction :
         e.editor?.let {
             e.file?.let { file ->
                 log.info("Showing history for selection in ${file.path}")
-                val action = ActionManager.getInstance().getAction("Vcs.ShowHistoryForBlock")!!
-                ActionUtil.performAction(action, e)
+                e.performAction("Vcs.ShowHistoryForBlock")
             }
         }
     }

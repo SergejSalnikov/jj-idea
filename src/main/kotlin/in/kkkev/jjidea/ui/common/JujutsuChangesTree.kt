@@ -2,7 +2,6 @@ package `in`.kkkev.jjidea.ui.common
 
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.*
-import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.VcsDataKeys
 import com.intellij.openapi.vcs.changes.Change
@@ -13,6 +12,7 @@ import com.intellij.openapi.vcs.changes.ui.ChangesGroupingSupport.Companion.DIRE
 import com.intellij.openapi.vcs.changes.ui.ChangesGroupingSupport.Companion.REPOSITORY_GROUPING
 import com.intellij.openapi.vcs.changes.ui.TreeModelBuilder
 import `in`.kkkev.jjidea.actions.filechange.fileChangeActionGroup
+import `in`.kkkev.jjidea.actions.performAction
 import javax.swing.tree.DefaultTreeModel
 
 /**
@@ -60,19 +60,10 @@ class JujutsuChangesTree(project: Project, showCheckboxes: Boolean = false) :
      * Uses the Diff.ShowDiff action which reads VcsDataKeys.CHANGES from our uiDataSnapshot.
      */
     fun installHandlers() {
-        val diffAction = ActionManager.getInstance().getAction("Diff.ShowDiff")!!
         val invokeDiff: () -> Boolean = {
             if (selectedChanges.isNotEmpty()) {
                 val context = DataManager.getInstance().getDataContext(this)
-                val event = AnActionEvent.createEvent(
-                    diffAction,
-                    context,
-                    null,
-                    ActionPlaces.CHANGES_VIEW_POPUP,
-                    ActionUiKind.NONE,
-                    null
-                )
-                ActionUtil.performAction(diffAction, event)
+                performAction("Diff.ShowDiff", context, ActionPlaces.CHANGES_VIEW_POPUP)
                 true
             } else {
                 false

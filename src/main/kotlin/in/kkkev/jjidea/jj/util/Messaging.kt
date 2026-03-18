@@ -4,7 +4,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Disposer
 import com.intellij.util.messages.Topic
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -99,11 +98,10 @@ class SimpleNotifiableState<T : Any>(
         project.messageBus.connect(parent).subscribe(topic, handler)
         val current = value
         if (!equalityCheck(current, startValue)) {
+            // Publish through the bus so that if parent is disposed before this runs,
+            // the disposed connection simply drops the message.
             ApplicationManager.getApplication().invokeLater {
-                @Suppress("UnstableApiUsage")
-                if (!Disposer.isDisposed(parent)) {
-                    handler.changed(current)
-                }
+                publisher.changed(current)
             }
         }
     }
