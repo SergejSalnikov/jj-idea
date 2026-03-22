@@ -196,6 +196,8 @@ class JjStub(override val workDir: Path) : JjBackend {
     }
 
     private fun cmdFileAnnotate(args: List<String>): JjBackend.Result {
+        // Auto-snapshot working copy so file changes are visible to annotation (matching real jj)
+        snapshotWorkingCopy()
         val revset = args.flagValue("-r") ?: "@"
         val template = args.flagValue("-T") ?: throw StubError("annotate requires -T")
         // File path: last positional arg
@@ -273,11 +275,17 @@ class JjStub(override val workDir: Path) : JjBackend {
 
         val output = buildString {
             for ((name, change) in allBookmarks) {
-                if (isBookmarkTemplate(template)) {
-                    field(name)
-                    field(qualifiedChangeId(change))
-                } else {
-                    throw StubError("Unknown bookmark template")
+                when {
+                    isFullBookmarkTemplate(template) -> {
+                        field("true") // present (all stub bookmarks are local)
+                        field(name) // nameWithRemote (no remotes in stub)
+                        field(qualifiedChangeId(change))
+                    }
+                    isBookmarkTemplate(template) -> {
+                        field(name)
+                        field(qualifiedChangeId(change))
+                    }
+                    else -> throw StubError("Unknown bookmark template")
                 }
             }
         }
@@ -570,6 +578,7 @@ class JjStub(override val workDir: Path) : JjBackend {
         return String.format("%040x", id.toBigInteger())
     }
 
+    private fun isFullBookmarkTemplate(template: String) = "present" in template && "normal_target" in template
     private fun isBookmarkTemplate(template: String) = "normal_target" in template
 
     private fun StringBuilder.field(value: String) {
