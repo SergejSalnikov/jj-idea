@@ -46,6 +46,13 @@ class FileSelectionPanel(project: Project) : JPanel(BorderLayout()) {
      */
     val allIncluded: Boolean get() = includedChanges.size == changesTree.changes.size
 
+    /**
+     * Register a listener that is called when inclusion (checkbox state) changes.
+     */
+    fun addInclusionListener(listener: Runnable) {
+        changesTree.setInclusionListener(listener)
+    }
+
     private fun createToolbar() = ActionManager.getInstance().createActionToolbar(
         ActionPlaces.CHANGES_VIEW_TOOLBAR,
         DefaultActionGroup().apply {
