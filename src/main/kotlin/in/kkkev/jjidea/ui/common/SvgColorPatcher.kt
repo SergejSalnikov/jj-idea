@@ -12,7 +12,7 @@ import java.io.InputStream
 import java.net.URL
 import java.net.URLConnection
 import java.net.URLStreamHandler
-import java.util.Base64
+import java.util.*
 import javax.swing.Icon
 import kotlin.math.roundToInt
 
@@ -43,9 +43,11 @@ class SvgIcon private constructor(
     private val originalBytes: ByteArray,
     private val colors: ColorMap
 ) : Icon {
-    @Volatile private var cachedDigest = Long.MIN_VALUE
+    @Volatile
+    private var cachedDigest = Long.MIN_VALUE
 
-    @Volatile private var delegate: Icon? = null
+    @Volatile
+    private var delegate: Icon? = null
 
     private fun colorDigest() = colors.entries.fold(0L) { acc, (k, v) ->
         acc * 31 + k.hashCode() + v.second.rgb.toLong()
@@ -127,23 +129,23 @@ private class SvgBytesClassLoader(
 }
 
 /**
- * Creates a copy of this icon with all non-white colors replaced by [color].
+ * Creates a copy of this icon with the accent color replaced by [color].
  *
  * For [SvgIcon] instances, performs SVG-level transformation by recoloring
- * all known CSS classes. For other icon types, falls back to raster-based
+ * all accent-relevant CSS classes. For other icon types, falls back to raster-based
  * recoloring (painting to a [BufferedImage] and replacing pixels).
  *
  * Used for the `#HEXCOLOR` icon suffix in [in.kkkev.jjidea.ui.components.IconResolver].
  */
-fun Icon.uniformRecolored(color: Color): Icon = when (this) {
+fun Icon.accented(accent: Color): Icon = when (this) {
     is SvgIcon -> recolored(
         mapOf(
-            "primary" to ("stroke" to color),
-            "primary-fill" to ("fill" to color),
-            "accent" to ("stroke" to color)
+            "accent" to ("stroke" to accent),
+            "accent-fill" to ("fill" to accent)
         )
     )
-    else -> RasterRecoloredIcon(this, color)
+
+    else -> RasterRecoloredIcon(this, accent)
 }
 
 private class RasterRecoloredIcon(private val base: Icon, private val color: Color) : Icon {

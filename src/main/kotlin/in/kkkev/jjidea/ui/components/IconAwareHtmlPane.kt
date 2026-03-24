@@ -11,7 +11,7 @@ import `in`.kkkev.jjidea.jj.ChangeId
 import `in`.kkkev.jjidea.jj.invalidate
 import `in`.kkkev.jjidea.ui.common.JujutsuIcons
 import `in`.kkkev.jjidea.ui.common.ScaledIcon
-import `in`.kkkev.jjidea.ui.common.uniformRecolored
+import `in`.kkkev.jjidea.ui.common.accented
 import `in`.kkkev.jjidea.vcs.jujutsuRepository
 import java.awt.Component
 import java.awt.Graphics
@@ -57,7 +57,7 @@ object IconResolver {
         val scale = scaleParts.getOrNull(1)?.toFloatOrNull()
         val colorParts = scaleParts[0].split("#", limit = 2)
         val baseIcon = icons[colorParts[0]] ?: return null
-        val colored = colorParts.getOrNull(1)?.let { baseIcon.uniformRecolored(ColorUtil.fromHex(it)) } ?: baseIcon
+        val colored = colorParts.getOrNull(1)?.let { baseIcon.accented(ColorUtil.fromHex(it)) } ?: baseIcon
         return if (scale != null) ScaledIcon(colored, scale) else colored
     }
 

@@ -164,7 +164,7 @@ fun TextCanvas.append(bookmark: Bookmark) {
 fun TextCanvas.append(repo: JujutsuRepository) {
     val color = RepositoryColors.getColor(repo)
     colored(color) {
-        append(icon(AllIcons.Nodes::Folder))
+        append(icon(JujutsuIcons::Repo))
         append(" ")
         bold { append(repo.displayName) }
     }

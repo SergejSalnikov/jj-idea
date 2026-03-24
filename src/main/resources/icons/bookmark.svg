@@ -1,6 +1,6 @@
 <svg width="10" height="16" viewBox="3 0 9 16" fill="none" xmlns="http://www.w3.org/2000/svg">
   <style>
-    .primary { stroke: #6c707e }
+    .accent { stroke: #20a070 }
   </style>
-  <path d="m3.5,15 l4,-3.5 l4,3.5 v-14 h-8 v14 z" class="primary"/>
+  <path d="m3.5,15 l4,-3.5 l4,3.5 v-14 h-8 v14 z" class="accent"/>
 </svg>

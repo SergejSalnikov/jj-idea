@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Made accented icon to represent a repository
+
 ## [0.5.6] - 2026-03-24
 
 ### Fixed

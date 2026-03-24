@@ -46,4 +46,13 @@ object JujutsuIcons {
 
     @JvmField
     val Squash: Icon = strokeFillIcon("/icons/squash.svg", GRAY)
+
+    @JvmField
+    val Repo: Icon = strokeFillIcon("/icons/repo.svg", GRAY)
+
+    // TODO How do we call this for a colored { ... } icon?
+    fun repo(accent: Color) = load("/icons/repo.svg").recolored(mapOf(
+        "accent" to ("stroke" to accent),
+        "accent-fill" to ("fill" to accent)
+    ))
 }
