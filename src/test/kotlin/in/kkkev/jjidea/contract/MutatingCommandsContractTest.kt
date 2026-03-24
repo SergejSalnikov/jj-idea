@@ -1,7 +1,9 @@
 package `in`.kkkev.jjidea.contract
 
+import `in`.kkkev.jjidea.actions.change.parseRemainingChangeId
 import `in`.kkkev.jjidea.jj.cli.CliLogService
 import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.BeforeEach
@@ -150,5 +152,111 @@ abstract class MutatingCommandsContractTest {
         val logResult = jj.run("log", "-r", "@", "--no-graph", "-T", basicSpec)
         val logFields = logResult.stdout.trim().split("\u0000")
         logFields[3] shouldContain "new-name"
+    }
+
+    @Test
+    fun `split creates two changes from one`() {
+        jj.createFile("a.txt", "content a")
+        jj.createFile("b.txt", "content b")
+        jj.describe("Original commit")
+
+        val result = jj.run("split", "-r", "@", "-m", "First part", "a.txt")
+        result.isSuccess shouldBe true
+
+        // First part should have "First part" description
+        val parentLog = jj.run("log", "-r", "@-", "--no-graph", "-T", basicSpec)
+        val parentFields = parentLog.stdout.trim().split("\u0000")
+        parentFields[2] shouldBe "First part\n"
+
+        // Remaining (working copy) should have the original description
+        val wcLog = jj.run("log", "-r", "@", "--no-graph", "-T", basicSpec)
+        val wcFields = wcLog.stdout.trim().split("\u0000")
+        wcFields[2] shouldBe "Original commit\n"
+    }
+
+    @Test
+    fun `split stderr contains Remaining changes line with change id`() {
+        jj.createFile("a.txt", "content a")
+        jj.createFile("b.txt", "content b")
+        jj.describe("Original commit")
+
+        val result = jj.run("split", "-r", "@", "-m", "First part", "a.txt")
+        result.isSuccess shouldBe true
+
+        // The stderr should contain a parseable "Remaining changes:" line
+        val childId = parseRemainingChangeId(result.stderr)
+        childId.shouldNotBeNull()
+
+        // The parsed (short) change ID should resolve when used as a revset
+        val childLog = jj.run("log", "-r", childId.full, "--no-graph", "-T", basicSpec)
+        childLog.isSuccess shouldBe true
+        // The resolved change should have the original description
+        val childFields = childLog.stdout.trim().split("\u0000")
+        childFields[2] shouldBe "Original commit\n"
+    }
+
+    @Test
+    fun `split with describe chains correctly`() {
+        jj.createFile("a.txt", "content a")
+        jj.createFile("b.txt", "content b")
+        jj.describe("Original commit")
+
+        // Split, then describe the child with a new message
+        val splitResult = jj.run("split", "-r", "@", "-m", "Parent desc", "a.txt")
+        splitResult.isSuccess shouldBe true
+
+        val childId = parseRemainingChangeId(splitResult.stderr)
+        childId.shouldNotBeNull()
+
+        val descResult = jj.run("describe", "-r", childId.full, "-m", "Child desc")
+        descResult.isSuccess shouldBe true
+
+        // Verify child has the new description
+        val childLog = jj.run("log", "-r", childId.full, "--no-graph", "-T", basicSpec)
+        val childFields = childLog.stdout.trim().split("\u0000")
+        childFields[2] shouldBe "Child desc\n"
+
+        // Verify parent still has its description
+        val parentLog = jj.run("log", "-r", "@-", "--no-graph", "-T", basicSpec)
+        val parentFields = parentLog.stdout.trim().split("\u0000")
+        parentFields[2] shouldBe "Parent desc\n"
+    }
+
+    @Test
+    fun `split preserves file content in each part`() {
+        jj.createFile("a.txt", "content a")
+        jj.createFile("b.txt", "content b")
+        jj.describe("Two files")
+
+        jj.split("First part", listOf("a.txt"))
+
+        // First part (parent) should have a.txt changes
+        val parentDiff = jj.run("diff", "-r", "@-", "--summary")
+        parentDiff.isSuccess shouldBe true
+        parentDiff.stdout shouldContain "a.txt"
+
+        // Remaining (child/WC) should have b.txt changes
+        val wcDiff = jj.run("diff", "-r", "@", "--summary")
+        wcDiff.isSuccess shouldBe true
+        wcDiff.stdout shouldContain "b.txt"
+    }
+
+    @Test
+    fun `split non-working-copy rebases descendants`() {
+        jj.createFile("a.txt", "content a")
+        jj.createFile("b.txt", "content b")
+        jj.describe("Target")
+        jj.newChange("Child of target")
+
+        // Get the parent change id
+        val parentLog = jj.run("log", "-r", "@-", "--no-graph", "-T", basicSpec)
+        val targetChangeId = parentLog.stdout.trim().split("\u0000")[0].split("~")[0]
+
+        val result = jj.run("split", "-r", targetChangeId, "-m", "First part", "a.txt")
+        result.isSuccess shouldBe true
+
+        // stderr should mention rebased descendants
+        result.stderr shouldContain "Rebased"
+        result.stderr shouldContain "descendant"
     }
 }

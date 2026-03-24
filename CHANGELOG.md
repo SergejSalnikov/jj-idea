@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix bookmark icons inconsistent in dark mode (wrong size and fill)
-- Replace internal IntelliJ SVG APIs with public IconLoader API for plugin compatibility
 
 ### Added
+- Capability to split commits
 - Icons for describe, new change, rebase, split, and squash actions
 - Icons in HTML panels now scale correctly inside `smaller` blocks
 

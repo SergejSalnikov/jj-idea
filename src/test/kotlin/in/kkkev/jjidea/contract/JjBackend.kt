@@ -10,6 +10,7 @@ interface JjBackend {
     fun describe(message: String)
     fun newChange(message: String = "")
     fun bookmarkCreate(name: String)
+    fun split(message: String, filePaths: List<String>, revision: String = "@")
 
     data class Result(val exitCode: Int, val stdout: String, val stderr: String) {
         val isSuccess get() = exitCode == 0
