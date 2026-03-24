@@ -1,12 +1,7 @@
 package `in`.kkkev.jjidea.contract
 
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
-import kotlin.io.path.name
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
+import kotlin.io.path.*
 
 /**
  * In-memory jj stub implementing JjBackend.
@@ -58,6 +53,13 @@ class JjStub(override val workDir: Path) : JjBackend {
         check(result.isSuccess) { "jj bookmark create failed: ${result.stderr}" }
     }
 
+    override fun split(message: String, filePaths: List<String>, revision: String) {
+        val args = mutableListOf("split", "-r", revision, "-m", message)
+        args.addAll(filePaths)
+        val result = run(*args.toTypedArray())
+        check(result.isSuccess) { "jj split failed: ${result.stderr}" }
+    }
+
     // -- Command dispatch --
 
     private fun dispatch(args: List<String>): JjBackend.Result = when {
@@ -69,6 +71,7 @@ class JjStub(override val workDir: Path) : JjBackend {
         args.startsWith("new") -> cmdNew(args)
         args.startsWith("abandon") -> cmdAbandon(args)
         args.startsWith("edit") -> cmdEdit(args)
+        args.startsWith("split") -> cmdSplit(args)
         args.startsWith("file", "show") -> cmdFileShow(args)
         args.startsWith("file", "annotate") -> cmdFileAnnotate(args)
         args.startsWith("bookmark") -> dispatchBookmark(args)
@@ -183,12 +186,152 @@ class JjStub(override val workDir: Path) : JjBackend {
         return ok()
     }
 
+    private fun cmdSplit(args: List<String>): JjBackend.Result {
+        val message = args.flagValue("-m") ?: ""
+        val revset = args.flagValue("-r") ?: "@"
+        // File paths are positional args after flags
+        val filePaths = args.drop(1)
+            .filter { it != "-r" && it != revset && it != "-m" && it != message && !it.startsWith("-") }
+
+        val isWc = revset == "@"
+        if (isWc) snapshotWorkingCopy()
+        val source = resolveOne(revset)
+
+        if (filePaths.isEmpty()) {
+            throw StubError("split requires file paths (interactive mode not supported in stub)")
+        }
+
+        // Partition files: selected go to first (parent), remaining go to second (child)
+        val sourceFiles = if (isWc) {
+            // For WC, include both explicit files and filesystem diffs
+            val allFiles = source.files.toMutableMap()
+            val fsFiles = scanWorkDir()
+            val parentFiles = getFilesAtChange(findParentOrNull(source))
+            for ((path, content) in fsFiles) {
+                if (path !in allFiles && (path !in parentFiles || parentFiles[path] != content)) {
+                    allFiles[path] = content
+                }
+            }
+            for (path in parentFiles.keys) {
+                if (path !in fsFiles && path !in allFiles) {
+                    allFiles[path] = null
+                }
+            }
+            allFiles
+        } else {
+            source.files.toMap()
+        }
+
+        val selectedFiles = mutableMapOf<String, String?>()
+        val remainingFiles = mutableMapOf<String, String?>()
+        for ((path, content) in sourceFiles) {
+            if (path in filePaths) {
+                selectedFiles[path] = content
+            } else {
+                remainingFiles[path] = content
+            }
+        }
+
+        // First change (selected): keeps source's parents, gets the -m description
+        val firstChange = newStubChange(description = message, parentIds = source.parentIds)
+        firstChange.files.putAll(selectedFiles)
+        changes.add(firstChange)
+
+        // Second change (remaining): child of first, keeps original description
+        val secondChange = newStubChange(description = source.description, parentIds = listOf(firstChange.commitId))
+        secondChange.files.putAll(remainingFiles)
+        changes.add(secondChange)
+
+        // Reparent children of source to point to second
+        val rebased = mutableListOf<StubChange>()
+        for (change in changes) {
+            if (change === source || change === firstChange || change === secondChange) continue
+            if (change.abandoned) continue
+            val idx = change.parentIds.indexOf(source.commitId)
+            if (idx >= 0) {
+                val newParentIds = change.parentIds.toMutableList()
+                newParentIds[idx] = secondChange.commitId
+                // StubChange parentIds is a val, so we need to create new one
+                rebased.add(change)
+            }
+        }
+        // Since parentIds is a val List, we need a workaround. Let me check...
+        // Actually parentIds is just List<String> on StubChange - it's a val.
+        // We need to handle this differently. Let me update working copy index.
+
+        // Remove source
+        source.abandoned = true
+
+        // Handle working copy: if splitting WC, move WC to second
+        if (isWc) {
+            workingCopyIndex = changes.indexOf(secondChange)
+        } else {
+            // Reparent working copy if it was a child of source
+            // We can't mutate parentIds directly, so create replacement changes
+            reparentChildren(source.commitId, secondChange.commitId)
+        }
+
+        // Build stderr matching jj's format
+        val rebasedCount = rebased.size
+        val stderr = buildString {
+            if (rebasedCount > 0) {
+                val suffix = if (rebasedCount == 1) "" else "s"
+                appendLine("Rebased $rebasedCount descendant commit$suffix")
+            }
+            appendLine(
+                "Selected changes : ${shortId(firstChange.changeId)} " +
+                    "${shortCommitId(firstChange.commitId)} $message"
+            )
+            val remainingDesc = source.description.ifEmpty { "(no description set)" }
+            appendLine(
+                "Remaining changes: ${shortId(secondChange.changeId)} " +
+                    "${shortCommitId(secondChange.commitId)} $remainingDesc"
+            )
+        }
+
+        return JjBackend.Result(0, "", stderr)
+    }
+
+    /**
+     * Reparent all non-abandoned changes that had [oldParentId] as a parent
+     * to point to [newParentId] instead. Since [StubChange.parentIds] is a val,
+     * we replace the change in the list.
+     */
+    private fun reparentChildren(oldParentId: String, newParentId: String) {
+        for (i in changes.indices) {
+            val change = changes[i]
+            if (change.abandoned) continue
+            val idx = change.parentIds.indexOf(oldParentId)
+            if (idx >= 0) {
+                val newParentIds = change.parentIds.toMutableList()
+                newParentIds[idx] = newParentId
+                val replacement = StubChange(
+                    changeId = change.changeId,
+                    commitId = nextCommitId(),
+                    description = change.description,
+                    parentIds = newParentIds,
+                    files = change.files,
+                    bookmarks = change.bookmarks,
+                    authorName = change.authorName,
+                    authorEmail = change.authorEmail,
+                    timestamp = change.timestamp,
+                    abandoned = change.abandoned,
+                    immutable = change.immutable
+                )
+                changes[i] = replacement
+                if (workingCopyIndex == i) workingCopyIndex = i // stays the same index
+            }
+        }
+    }
+
     private fun cmdFileShow(args: List<String>): JjBackend.Result {
         val revset = args.flagValue("-r") ?: "@"
         // File path is the last arg that doesn't start with -
-        val filePath = args.dropWhile { it != "show" }.drop(1)
-            .filter { it != "-r" && it != revset && !it.startsWith("-") }
-            .lastOrNull() ?: throw StubError("file show requires a path")
+        val filePath =
+            args.dropWhile { it != "show" }
+                .drop(1)
+                .lastOrNull { it != "-r" && it != revset && !it.startsWith("-") }
+                ?: throw StubError("file show requires a path")
         val change = resolveOne(revset)
         val content = getFileAtChange(change, filePath)
             ?: throw StubError("No such file: $filePath")
@@ -201,9 +344,10 @@ class JjStub(override val workDir: Path) : JjBackend {
         val revset = args.flagValue("-r") ?: "@"
         val template = args.flagValue("-T") ?: throw StubError("annotate requires -T")
         // File path: last positional arg
-        val filePath = args.dropWhile { it != "annotate" }.drop(1)
-            .filter { it != "-r" && it != revset && it != "-T" && it != template && !it.startsWith("-") }
-            .lastOrNull() ?: throw StubError("annotate requires a path")
+        val filePath = args.dropWhile { it != "annotate" }
+            .drop(1)
+            .lastOrNull { it != "-r" && it != revset && it != "-T" && it != template && !it.startsWith("-") }
+            ?: throw StubError("annotate requires a path")
         val target = resolveOne(revset)
         val content = getFileAtChange(target, filePath) ?: throw StubError("No such file: $filePath")
         val lines = content.lines().let { if (it.last().isEmpty()) it.dropLast(1) else it }
@@ -281,10 +425,12 @@ class JjStub(override val workDir: Path) : JjBackend {
                         field(name) // nameWithRemote (no remotes in stub)
                         field(qualifiedChangeId(change))
                     }
+
                     isBookmarkTemplate(template) -> {
                         field(name)
                         field(qualifiedChangeId(change))
                     }
+
                     else -> throw StubError("Unknown bookmark template")
                 }
             }
@@ -366,6 +512,7 @@ class JjStub(override val workDir: Path) : JjBackend {
                 ?: throw StubError("Working copy has no parent")
             listOf(changes.first { it.commitId == parentId })
         }
+
         "all()" -> changes.filter { !it.abandoned }.reversed()
         else -> {
             val match = changes.firstOrNull { !it.abandoned && it.changeId.startsWith(revset) }

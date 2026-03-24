@@ -11,8 +11,6 @@ import com.intellij.util.ui.UIUtil
 import `in`.kkkev.jjidea.jj.ChangeId
 import `in`.kkkev.jjidea.jj.CommitId
 import `in`.kkkev.jjidea.jj.LogEntry
-import `in`.kkkev.jjidea.ui.common.FileSelectionPanel
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
@@ -26,11 +24,20 @@ class SplitDialogTest {
     private val project = projectFixture()
 
     @Test
-    fun `description pre-populated with source description`() {
+    fun `parent description pre-populated with source description`() {
         val source = createEntry("src1", description = "source desc")
         val dialog = SplitDialog(project.get(), source, emptyList())
 
-        dialog.descriptionText shouldBe "source desc"
+        dialog.parentDescriptionText shouldBe "source desc"
+        disposeDialog(dialog)
+    }
+
+    @Test
+    fun `child description pre-populated with source description`() {
+        val source = createEntry("src1", description = "source desc")
+        val dialog = SplitDialog(project.get(), source, emptyList())
+
+        dialog.childDescriptionText shouldBe "source desc"
         disposeDialog(dialog)
     }
 
@@ -39,53 +46,20 @@ class SplitDialogTest {
         val source = createEntry("src1", description = "")
         val dialog = SplitDialog(project.get(), source, emptyList())
 
-        dialog.descriptionText shouldBe ""
+        dialog.parentDescriptionText shouldBe ""
+        dialog.childDescriptionText shouldBe ""
         disposeDialog(dialog)
     }
 
     @Test
-    fun `file selection shows changes and all included by default`() {
+    fun `all files start in parent tree`() {
         val changes = listOf(change("src/Main.kt"), change("src/Utils.kt"))
         val source = createEntry("src1", description = "desc")
         val dialog = SplitDialog(project.get(), source, changes)
 
-        waitForRefresh(dialog.fileSelection)
-        dialog.fileSelection.includedChanges shouldHaveSize 2
-        dialog.fileSelection.allIncluded shouldBe true
-        disposeDialog(dialog)
-    }
-
-    @Test
-    fun `unchecking file updates selection`() {
-        val changes = listOf(change("src/Main.kt"), change("src/Utils.kt"), change("README.md"))
-        val source = createEntry("src1", description = "desc")
-        val dialog = SplitDialog(project.get(), source, changes)
-
-        waitForRefresh(dialog.fileSelection)
-        dialog.fileSelection.changesTree.setIncludedChanges(changes.take(1))
-
-        dialog.fileSelection.includedChanges shouldHaveSize 1
-        dialog.fileSelection.allIncluded shouldBe false
-        disposeDialog(dialog)
-    }
-
-    @Test
-    fun `summary label updates on selection change`() {
-        val changes = listOf(change("src/Main.kt"), change("src/Utils.kt"), change("README.md"))
-        val source = createEntry("src1", description = "desc")
-        val dialog = SplitDialog(project.get(), source, changes)
-
-        waitForRefresh(dialog.fileSelection)
-        // All 3 checked initially
-        dialog.summaryLabel.text shouldContain "3 files"
-        dialog.summaryLabel.text shouldContain "0 files"
-
-        // Uncheck one
-        dialog.fileSelection.changesTree.setIncludedChanges(changes.take(2))
-        UIUtil.dispatchAllInvocationEvents()
-
-        dialog.summaryLabel.text shouldContain "2 files"
-        dialog.summaryLabel.text shouldContain "1 files"
+        waitForRefresh(dialog.parentTree)
+        dialog.parentTree.changes shouldBe changes
+        dialog.childTree.changes.size shouldBe 0
         disposeDialog(dialog)
     }
 
@@ -94,9 +68,37 @@ class SplitDialogTest {
         val source = createEntry("src1", description = "desc")
         val dialog = SplitDialog(project.get(), source, emptyList())
 
-        // The parallel checkbox is private, but we can verify via the result
-        // by checking that the dialog creates a SplitSpec with parallel=false
-        // (We can't easily access the checkbox, so we verify indirectly)
+        dialog.parallelCheckBox.isSelected shouldBe false
+        disposeDialog(dialog)
+    }
+
+    @Test
+    fun `dynamic labels switch when parallel toggled`() {
+        val source = createEntry("src1", description = "desc")
+        val dialog = SplitDialog(project.get(), source, emptyList())
+
+        // Default: linear mode
+        dialog.childHeaderLabel.text shouldContain "Child"
+        dialog.parentHeaderLabel.text shouldContain "Parent"
+
+        // Toggle to parallel
+        dialog.parallelCheckBox.isSelected = true
+        dialog.parallelCheckBox.actionListeners.forEach { it.actionPerformed(null) }
+        UIUtil.dispatchAllInvocationEvents()
+
+        dialog.childHeaderLabel.text shouldContain "First"
+        dialog.parentHeaderLabel.text shouldContain "Second"
+
+        disposeDialog(dialog)
+    }
+
+    @Test
+    fun `empty label visible when child tree is empty`() {
+        val changes = listOf(change("src/Main.kt"))
+        val source = createEntry("src1", description = "desc")
+        val dialog = SplitDialog(project.get(), source, changes)
+
+        dialog.childEmptyLabel.isVisible shouldBe true
         disposeDialog(dialog)
     }
 
@@ -112,9 +114,9 @@ class SplitDialogTest {
         return Change(null, SimpleContentRevision("", filePath, "1"))
     }
 
-    private fun waitForRefresh(panel: FileSelectionPanel) {
+    private fun waitForRefresh(tree: com.intellij.openapi.vcs.changes.ui.AsyncChangesTreeImpl<*>) {
         var refreshed = false
-        panel.changesTree.invokeAfterRefresh { refreshed = true }
+        tree.invokeAfterRefresh { refreshed = true }
         val deadline = System.currentTimeMillis() + 5_000
         while (!refreshed && System.currentTimeMillis() < deadline) {
             UIUtil.dispatchAllInvocationEvents()

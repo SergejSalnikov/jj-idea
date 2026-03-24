@@ -56,6 +56,13 @@ class JjCli(override val workDir: Path) : JjBackend {
         check(result.isSuccess) { "jj bookmark create failed: ${result.stderr}" }
     }
 
+    override fun split(message: String, filePaths: List<String>, revision: String) {
+        val args = mutableListOf("split", "-r", revision, "-m", message)
+        args.addAll(filePaths)
+        val result = run(*args.toTypedArray())
+        check(result.isSuccess) { "jj split failed: ${result.stderr}" }
+    }
+
     companion object {
         fun isAvailable(): Boolean = try {
             val process = ProcessBuilder("jj", "--version")

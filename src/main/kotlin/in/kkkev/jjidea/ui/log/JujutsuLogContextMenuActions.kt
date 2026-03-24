@@ -64,7 +64,7 @@ object JujutsuLogContextMenuActions {
         val rebaseRepo = uniqueRepo?.takeIf { mutableEntries.isNotEmpty() }
         add(rebaseAction(project, rebaseRepo, mutableEntries, allEntries))
         add(squashAction(project, squashableEntry(entry, allEntries), allEntries))
-        add(splitAction(project, entry?.takeIf { !it.immutable }))
+        add(splitAction(project, entry?.takeIf { !it.immutable }, allEntries))
 
         addSeparator()
         add(createBookmarkAction(entry))
