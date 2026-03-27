@@ -49,7 +49,7 @@ class JujutsuChangeProvider(private val vcs: JujutsuVcs) : ChangeProvider {
             } catch (e: ProcessCanceledException) {
                 throw e
             } catch (e: Exception) {
-                log.error("Error getting changes", e)
+                log.warn("Error getting changes for $repo: ${e.message}")
             }
         }
     }

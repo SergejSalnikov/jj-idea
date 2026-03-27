@@ -33,7 +33,11 @@ data class JujutsuRepositoryImpl(override val project: Project, override val dir
     JujutsuRepository {
     private val executor: CommandExecutor by lazy {
         val settings = JujutsuSettings.getInstance(project)
-        CliExecutor(directory) { settings.state.jjExecutablePath }
+        CliExecutor(
+            root = directory,
+            executableProvider = { settings.state.jjExecutablePath },
+            onJjNotFound = { JjAvailabilityChecker.getInstance(project).recheck() }
+        )
     }
 
     /**

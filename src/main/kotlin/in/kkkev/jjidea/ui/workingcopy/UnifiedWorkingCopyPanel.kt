@@ -23,7 +23,10 @@ import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import `in`.kkkev.jjidea.JujutsuBundle
+import `in`.kkkev.jjidea.jj.JjAvailabilityChecker
+import `in`.kkkev.jjidea.jj.JjAvailabilityStatus
 import `in`.kkkev.jjidea.jj.stateModel
+import `in`.kkkev.jjidea.ui.common.JjNotInstalledPanel
 import `in`.kkkev.jjidea.ui.common.JujutsuChangesTree
 import `in`.kkkev.jjidea.vcs.filePath
 import java.awt.BorderLayout
@@ -60,8 +63,9 @@ class UnifiedWorkingCopyPanel(private val project: Project) : JPanel(BorderLayou
     private val changesTree = JujutsuChangesTree(project)
     private val controlsPanel = WorkingCopyControlsPanel(project)
     private val emptyStatePanel = createEmptyStatePanel()
+    private var notInstalledPanel: JPanel = JPanel() // Placeholder, updated when status changes
 
-    // Card layout for switching between content and empty state
+    // Card layout for switching between content, empty state, and not installed state
     private val contentPanel = JPanel(BorderLayout())
     private val cardPanel = JPanel(CardLayout())
 
@@ -92,6 +96,7 @@ class UnifiedWorkingCopyPanel(private val project: Project) : JPanel(BorderLayou
         setupTreeExpansionTracking()
         setupVfsListener()
         subscribeToStateModel()
+        subscribeToAvailabilityStatus()
     }
 
     private fun createUI() {
@@ -125,9 +130,10 @@ class UnifiedWorkingCopyPanel(private val project: Project) : JPanel(BorderLayou
 
         contentPanel.add(mainPanel, BorderLayout.CENTER)
 
-        // Setup card panel for switching between content and empty state
+        // Setup card panel for switching between content, empty state, and not installed state
         cardPanel.add(contentPanel, "content")
         cardPanel.add(emptyStatePanel, "empty")
+        cardPanel.add(notInstalledPanel, "notInstalled")
 
         add(cardPanel, BorderLayout.CENTER)
     }
@@ -192,6 +198,10 @@ class UnifiedWorkingCopyPanel(private val project: Project) : JPanel(BorderLayou
     private fun subscribeToStateModel() {
         // repositoryStates fires on EDT already (via invokeLater in SimpleNotifiableState)
         project.stateModel.repositoryStates.connect(this) { new ->
+            // Only update repo state if jj is available
+            val status = JjAvailabilityChecker.getInstance(project).status.value
+            if (status !is JjAvailabilityStatus.Available) return@connect
+
             // Update UI based on whether we have any repos
             val hasRepos = new.isNotEmpty()
             val cardLayout = cardPanel.layout as CardLayout
@@ -222,6 +232,33 @@ class UnifiedWorkingCopyPanel(private val project: Project) : JPanel(BorderLayou
             // Also update from state model
             project.stateModel.repositoryStates.value.find { it.repo == key.repo }?.let {
                 controlsPanel.update(it)
+            }
+        }
+    }
+
+    private fun subscribeToAvailabilityStatus() {
+        val checker = JjAvailabilityChecker.getInstance(project)
+        checker.status.connect(this) { status ->
+            updateForAvailabilityStatus(status)
+        }
+        // Also check current status immediately
+        updateForAvailabilityStatus(checker.status.value)
+    }
+
+    private fun updateForAvailabilityStatus(status: JjAvailabilityStatus) {
+        val cardLayout = cardPanel.layout as CardLayout
+        when (status) {
+            is JjAvailabilityStatus.Available -> {
+                // Let state model handler decide between "content" and "empty"
+                val hasRepos = project.stateModel.repositoryStates.value.isNotEmpty()
+                cardLayout.show(cardPanel, if (hasRepos) "content" else "empty")
+            }
+            else -> {
+                // Replace the notInstalled panel with fresh content for current status
+                cardPanel.remove(notInstalledPanel)
+                notInstalledPanel = JjNotInstalledPanel(project, status)
+                cardPanel.add(notInstalledPanel, "notInstalled")
+                cardLayout.show(cardPanel, "notInstalled")
             }
         }
     }

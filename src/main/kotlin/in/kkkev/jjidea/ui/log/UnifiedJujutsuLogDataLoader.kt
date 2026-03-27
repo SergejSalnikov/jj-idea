@@ -76,11 +76,11 @@ class UnifiedJujutsuLogDataLoader(
                                 log.info("Loaded ${loadedEntries.size} commits from ${repo.displayName}")
                             }.onFailure { e ->
                                 errors[repo] = e
-                                log.error("Failed to load commits from $repo", e)
+                                log.warn("Failed to load commits from $repo: ${e.message}")
                             }
                         } catch (e: Exception) {
                             errors[repo] = e
-                            log.error("Exception loading commits from $repo", e)
+                            log.warn("Exception loading commits from $repo: ${e.message}")
                         } finally {
                             latch.countDown()
                         }
@@ -90,7 +90,7 @@ class UnifiedJujutsuLogDataLoader(
                 latch.await(5, TimeUnit.MINUTES)
 
                 if (entriesByRepo.isEmpty() && errors.isNotEmpty()) {
-                    log.error("All repositories failed to load")
+                    log.warn("All repositories failed to load - jj may not be installed")
                     return@executeInBackground
                 }
 

@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import `in`.kkkev.jjidea.JujutsuBundle
 import `in`.kkkev.jjidea.actions.performAction
+import `in`.kkkev.jjidea.jj.JjAvailabilityStatus
 import `in`.kkkev.jjidea.jj.JujutsuRepository
 import java.util.concurrent.ConcurrentHashMap
 
@@ -24,6 +25,14 @@ object JujutsuNotifications {
 
     // Track which roots we've already notified about to avoid spamming
     private val notifiedUninitializedRoots = ConcurrentHashMap.newKeySet<String>()
+
+    // Track current availability notification to avoid duplicates (global, not per-project)
+    @Volatile
+    private var currentAvailabilityNotification: Notification? = null
+
+    // Track the last notified status to avoid duplicate notifications across projects
+    @Volatile
+    private var lastNotifiedStatus: JjAvailabilityStatus? = null
 
     /**
      * Show a notification that a VCS root is configured for Jujutsu but not initialized.
@@ -90,4 +99,85 @@ object JujutsuNotifications {
             sink[CommonDataKeys.PROJECT] = project
             sink[CommonDataKeys.VIRTUAL_FILE] = file
         }
+
+    /**
+     * Show a notification about jj availability issues.
+     * Only shows one notification at a time to avoid spam.
+     * Links to settings page for configuration.
+     */
+    fun notifyJjUnavailable(project: Project, status: JjAvailabilityStatus) {
+        // Skip if we already have an active notification for the same status type
+        if (currentAvailabilityNotification != null && isSameStatusType(lastNotifiedStatus, status)) {
+            return
+        }
+
+        // Clear any existing availability notification
+        clearAvailabilityNotification()
+
+        if (status is JjAvailabilityStatus.Available) return
+
+        val (title, content) = when (status) {
+            is JjAvailabilityStatus.NotFound -> Pair(
+                JujutsuBundle.message("notification.jj.notfound.title"),
+                JujutsuBundle.message("notification.jj.notfound.content")
+            )
+            is JjAvailabilityStatus.VersionTooOld -> Pair(
+                JujutsuBundle.message("notification.jj.version.title"),
+                JujutsuBundle.message(
+                    "notification.jj.version.content",
+                    status.version.toString(),
+                    status.minimumVersion.toString()
+                )
+            )
+            is JjAvailabilityStatus.InvalidPath -> Pair(
+                JujutsuBundle.message("notification.jj.invalid.title"),
+                JujutsuBundle.message("notification.jj.invalid.content", status.configuredPath)
+            )
+            is JjAvailabilityStatus.Available -> return
+        }
+
+        val notification = NotificationGroupManager.getInstance()
+            .getNotificationGroup(GROUP_ID)
+            .createNotification(title, content, NotificationType.WARNING)
+
+        notification.addAction(object : NotificationAction(
+            JujutsuBundle.message("notification.jj.action.configure")
+        ) {
+            override fun actionPerformed(e: AnActionEvent, notification: Notification) {
+                notification.expire()
+                ShowSettingsUtil.getInstance().showSettingsDialog(project, "Jujutsu")
+            }
+        })
+
+        // When notification is dismissed, clear the tracking so it can re-appear
+        notification.whenExpired {
+            if (currentAvailabilityNotification === notification) {
+                currentAvailabilityNotification = null
+                lastNotifiedStatus = null
+            }
+        }
+
+        lastNotifiedStatus = status
+        currentAvailabilityNotification = notification
+        notification.notify(project)
+    }
+
+    private fun isSameStatusType(a: JjAvailabilityStatus?, b: JjAvailabilityStatus?): Boolean =
+        when {
+            a == null || b == null -> false
+            a is JjAvailabilityStatus.NotFound && b is JjAvailabilityStatus.NotFound -> true
+            a is JjAvailabilityStatus.VersionTooOld && b is JjAvailabilityStatus.VersionTooOld -> true
+            a is JjAvailabilityStatus.InvalidPath && b is JjAvailabilityStatus.InvalidPath ->
+                a.configuredPath == b.configuredPath
+            else -> false
+        }
+
+    /**
+     * Clear the current availability notification (e.g., when jj becomes available).
+     */
+    fun clearAvailabilityNotification() {
+        currentAvailabilityNotification?.expire()
+        currentAvailabilityNotification = null
+        lastNotifiedStatus = null
+    }
 }

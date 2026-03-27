@@ -67,7 +67,7 @@ class CliLogService(private val repo: JujutsuRepository) : LogService {
                 parse(logTemplates.bookmarkListTemplate, result.stdout).filterNotNull()
             }
         } else {
-            log.error("Bookmark list command failed: ${result.stderr}")
+            log.warn("Bookmark list command failed: ${result.stderr}")
             Result.failure(VcsException("Error from jj bookmark list: " + result.stderr))
         }
     }
@@ -75,7 +75,7 @@ class CliLogService(private val repo: JujutsuRepository) : LogService {
     private fun <T> toResult(failureMessage: String, block: () -> T): Result<T> = try {
         Result.success(block())
     } catch (e: Exception) {
-        log.error(failureMessage, e)
+        log.warn("$failureMessage: ${e.message}")
         Result.failure(e)
     }
 

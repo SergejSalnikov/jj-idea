@@ -115,7 +115,8 @@ internal fun rebaseArgs(
  */
 class CliExecutor(
     private val root: VirtualFile,
-    private val executableProvider: () -> String = { "jj" }
+    private val executableProvider: () -> String = { "jj" },
+    private val onJjNotFound: (() -> Unit)? = null
 ) : CommandExecutor {
     private val log = Logger.getInstance(javaClass)
     private val defaultTimeout = TimeUnit.SECONDS.toMillis(30)
@@ -258,7 +259,8 @@ class CliExecutor(
         args: List<Any>,
         timeout: Long = defaultTimeout
     ): CommandExecutor.CommandResult {
-        val commandLine = GeneralCommandLine(executableProvider())
+        val executable = executableProvider()
+        val commandLine = GeneralCommandLine(executable)
             .withParameters(args.map { it.toString() })
             .withCharset(StandardCharsets.UTF_8)
 
@@ -271,7 +273,20 @@ class CliExecutor(
         log.info("Executing: jj $cmdName (${Thread.currentThread().name})")
 
         val startTime = System.currentTimeMillis()
-        val processHandler = CapturingProcessHandler(commandLine)
+
+        val processHandler = try {
+            CapturingProcessHandler(commandLine)
+        } catch (e: com.intellij.execution.process.ProcessNotCreatedException) {
+            // jj executable not found - return error result instead of throwing
+            log.warn("jj executable not found: $executable")
+            onJjNotFound?.invoke()
+            return CommandExecutor.CommandResult(
+                exitCode = -1,
+                stdout = "",
+                stderr = "jj executable not found: $executable. Please install jj or configure the path in Settings."
+            )
+        }
+
         val output: ProcessOutput = processHandler.runProcess(timeout.toInt())
         val duration = System.currentTimeMillis() - startTime
 

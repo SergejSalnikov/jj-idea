@@ -380,7 +380,7 @@ class WorkingCopyControlsPanel(private val project: Project) : JPanel(BorderLayo
                         updateWorkingCopyLabel(entry)
                     }
                 }.onFailure { error ->
-                    log.error("Failed to load current description", error)
+                    log.warn("Failed to load current description: ${error.message}")
                 }
             }
         }

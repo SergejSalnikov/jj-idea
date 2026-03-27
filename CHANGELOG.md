@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- jj installation detection: Plugin now detects jj in PATH and common installation locations (Homebrew, Cargo, Scoop, Chocolatey, Winget, Snap, APT)
+- jj availability notifications: Shows helpful guidance when jj is not found, version is too old (requires 0.37.0+), or configured path is invalid
+- Installation guidance: Notifications include one-click actions to copy install/upgrade commands or open documentation
+
 ## [0.5.8] - 2026-03-27
 
 ### Fixed

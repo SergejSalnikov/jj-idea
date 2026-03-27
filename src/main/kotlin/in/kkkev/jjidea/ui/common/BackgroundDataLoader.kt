@@ -33,7 +33,7 @@ abstract class BackgroundDataLoader(
     protected fun executeInBackground(
         run: (ProgressIndicator) -> Unit,
         onSuccess: () -> Unit,
-        onError: (Throwable) -> Unit = { log.error("Background task failed", it) }
+        onError: (Throwable) -> Unit = { log.warn("Background task failed: ${it.message}") }
     ) {
         if (!loading.compareAndSet(false, true)) {
             pendingRefresh.set(true)
