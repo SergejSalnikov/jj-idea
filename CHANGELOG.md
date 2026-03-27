@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Settings changes (jj executable path) now take effect immediately without IDE restart ([#4](https://github.com/kkkev/jj-idea/issues/4))
+
 ## [0.5.7] - 2026-03-24
 
 ### Changed

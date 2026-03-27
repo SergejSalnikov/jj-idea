@@ -115,7 +115,7 @@ internal fun rebaseArgs(
  */
 class CliExecutor(
     private val root: VirtualFile,
-    private val jjExecutable: String = "jj"
+    private val executableProvider: () -> String = { "jj" }
 ) : CommandExecutor {
     private val log = Logger.getInstance(javaClass)
     private val defaultTimeout = TimeUnit.SECONDS.toMillis(30)
@@ -258,7 +258,7 @@ class CliExecutor(
         args: List<Any>,
         timeout: Long = defaultTimeout
     ): CommandExecutor.CommandResult {
-        val commandLine = GeneralCommandLine(jjExecutable)
+        val commandLine = GeneralCommandLine(executableProvider())
             .withParameters(args.map { it.toString() })
             .withCharset(StandardCharsets.UTF_8)
 
