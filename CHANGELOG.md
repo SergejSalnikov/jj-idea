@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.10] - 2026-03-30
+
 ### Added
 - Git clone with Jujutsu: Clone Git repositories directly from File > New > Project from Version Control using `jj git clone`
 
@@ -228,7 +230,8 @@ numerous improvements made during the 0.1.x development cycle.
 - Refactored log tab management
 - Change hashes from change IDs to commit IDs for platform compatibility
 
-[Unreleased]: https://github.com/kkkev/jj-idea/compare/v0.5.9...HEAD
+[Unreleased]: https://github.com/kkkev/jj-idea/compare/v0.5.10...HEAD
+[0.5.10]: https://github.com/kkkev/jj-idea/releases/tag/v0.5.10
 [0.5.9]: https://github.com/kkkev/jj-idea/releases/tag/v0.5.9
 [0.5.8]: https://github.com/kkkev/jj-idea/releases/tag/v0.5.8
 [0.5.7]: https://github.com/kkkev/jj-idea/releases/tag/v0.5.7
