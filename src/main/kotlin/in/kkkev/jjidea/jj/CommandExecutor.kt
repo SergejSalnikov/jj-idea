@@ -1,7 +1,5 @@
 package `in`.kkkev.jjidea.jj
 
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -10,6 +8,8 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vcs.FilePath
 import com.intellij.openapi.vfs.VirtualFile
 import `in`.kkkev.jjidea.JujutsuBundle
+import `in`.kkkev.jjidea.util.runInBackground
+import `in`.kkkev.jjidea.util.runLater
 
 /**
  * Abstraction for executing jujutsu commands.
@@ -259,14 +259,14 @@ interface CommandExecutor {
         fun onFailure(callback: CommandResult.() -> Unit) = copy(onFailure = callback)
 
         private fun handleResult(result: CommandResult) {
-            ApplicationManager.getApplication().invokeLater({
+            runLater {
                 if (result.isSuccess) onSuccess(result.stdout) else onFailure(result)
-            }, ModalityState.any())
+            }
         }
 
         fun executeAsync() {
             FileDocumentManager.getInstance().saveAllDocuments()
-            ApplicationManager.getApplication().executeOnPooledThread {
+            runInBackground {
                 handleResult(commandExecutor.action())
             }
         }

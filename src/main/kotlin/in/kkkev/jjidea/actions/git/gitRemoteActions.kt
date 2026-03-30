@@ -1,12 +1,13 @@
 package `in`.kkkev.jjidea.actions.git
 
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import `in`.kkkev.jjidea.JujutsuBundle
 import `in`.kkkev.jjidea.actions.nullAndDumbAwareAction
 import `in`.kkkev.jjidea.jj.JujutsuRepository
 import `in`.kkkev.jjidea.jj.invalidate
+import `in`.kkkev.jjidea.util.runInBackground
+import `in`.kkkev.jjidea.util.runLater
 
 /**
  * Factory action for fetching from Git remote for a specific repository.
@@ -31,14 +32,14 @@ fun gitFetchAction(project: Project, repo: JujutsuRepository?) =
 fun gitPushAction(project: Project, repo: JujutsuRepository?) =
     nullAndDumbAwareAction(repo, "log.action.git.push", AllIcons.Vcs.Push) {
         // Load remotes and bookmarks off EDT, then show dialog on EDT
-        ApplicationManager.getApplication().executeOnPooledThread {
+        runInBackground {
             val (remotes, bookmarks) = GitPushDialog.loadDialogData(target)
 
-            ApplicationManager.getApplication().invokeLater {
+            runLater {
                 val dialog = GitPushDialog(project, remotes, bookmarks)
-                if (!dialog.showAndGet()) return@invokeLater
+                if (!dialog.showAndGet()) return@runLater
 
-                val spec = dialog.result ?: return@invokeLater
+                val spec = dialog.result ?: return@runLater
 
                 target.commandExecutor
                     .createCommand { gitPush(spec.remote, spec.bookmark, spec.allBookmarks) }
