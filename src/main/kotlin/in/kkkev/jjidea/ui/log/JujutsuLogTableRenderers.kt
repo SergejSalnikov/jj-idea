@@ -131,8 +131,10 @@ fun entryCanvas(entry: LogEntry, fg: Color, builder: TextCanvas.() -> Unit) = Fr
 
 /** Append status indicators: immutable/public icon and conflict warning. */
 fun TextCanvas.appendStatusIndicators(entry: LogEntry) {
-    append(icon(if (entry.immutable) JujutsuIcons::Immutable else JujutsuIcons::Mutable))
-    appendConflict(entry)
+    smaller {
+        append(icon(if (entry.immutable) JujutsuIcons::Immutable else JujutsuIcons::Mutable))
+        appendConflict(entry)
+    }
 }
 
 /** Append right-side decorations: bookmarks and working copy indicator. */

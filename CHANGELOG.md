@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Resized mutable/immutable icons in the log to be less prominent
+
 ## [0.5.10] - 2026-03-30
 
 ### Added
