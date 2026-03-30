@@ -72,6 +72,10 @@ Then install from `build/distributions/` via **Settings → Plugins → Install 
 2. The Working Copy panel appears on the left; the Jujutsu log appears in the Version Control tool window
 3. Configure settings at **Settings → Version Control → Jujutsu**
 
+## Roadmap
+
+See **[ROADMAP.md](ROADMAP.md)** for planned features, including remote bookmark management, squash/split from file selection, conflict resolution UI, and more.
+
 ## Documentation
 
 - **[Contributing](contributing.md)** — Development guidelines

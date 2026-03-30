@@ -33,6 +33,9 @@
         <li>The Working Copy panel appears on the left; the Jujutsu log appears in the Version Control tool window</li>
     </ol>
 
+    <h3>Roadmap</h3>
+    <p>Coming soon: remote bookmark management, squash/split from file selection, conflict resolution UI, operation log with undo/redo, and more. See the full <a href="https://github.com/kkkev/jj-idea/blob/master/ROADMAP.md">roadmap</a>.</p>
+
     <p><a href="https://github.com/kkkev/jj-idea">GitHub</a> · <a href="https://github.com/kkkev/jj-idea/issues">Issues</a></p>
     ]]></description>
 
