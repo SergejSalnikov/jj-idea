@@ -1,5 +1,7 @@
 package `in`.kkkev.jjidea.jj
 
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.TransactionGuard
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -265,14 +267,18 @@ interface CommandExecutor {
         }
 
         fun executeAsync() {
-            FileDocumentManager.getInstance().saveAllDocuments()
+            if (TransactionGuard.getInstance().isWriteSafeModality(ModalityState.current())) {
+                FileDocumentManager.getInstance().saveAllDocuments()
+            }
             runInBackground {
                 handleResult(commandExecutor.action())
             }
         }
 
         fun executeWithProgress(project: Project, title: String) {
-            FileDocumentManager.getInstance().saveAllDocuments()
+            if (TransactionGuard.getInstance().isWriteSafeModality(ModalityState.current())) {
+                FileDocumentManager.getInstance().saveAllDocuments()
+            }
             object : Task.Backgroundable(project, title, false) {
                 override fun run(indicator: ProgressIndicator) {
                     indicator.isIndeterminate = true

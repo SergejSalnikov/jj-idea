@@ -81,7 +81,7 @@ internal fun executeSplit(project: Project, target: LogEntry, spec: SplitSpec) {
                     target.repo.commandExecutor
                         .createCommand { describe(childDesc, childId) }
                         .onSuccess {
-                            target.repo.invalidate(select = target.id)
+                            target.repo.invalidate(select = target.id, vfsChanged = true)
                             splitLog.info("Split ${target.id} and described child $childId")
                         }
                         .onFailure { tellUser(project, "log.action.split.error") }
@@ -90,10 +90,10 @@ internal fun executeSplit(project: Project, target: LogEntry, spec: SplitSpec) {
                     splitLog.warn(
                         "Could not parse child change ID from split output: ${result.stderr}"
                     )
-                    target.repo.invalidate(select = target.id)
+                    target.repo.invalidate(select = target.id, vfsChanged = true)
                 }
             } else {
-                target.repo.invalidate(select = target.id)
+                target.repo.invalidate(select = target.id, vfsChanged = true)
                 splitLog.info("Split ${target.id}")
             }
         }

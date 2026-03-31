@@ -67,7 +67,7 @@ internal fun executeSquash(
                 spec.keepEmptied -> entry.id
                 else -> parentEntry?.id ?: WorkingCopy
             }
-            entry.repo.invalidate(select = selectId)
+            entry.repo.invalidate(select = selectId, vfsChanged = true)
             squashLog.info("Squashed ${entry.id} into parent")
         }
         .onFailure { tellUser(project, errorKey) }
