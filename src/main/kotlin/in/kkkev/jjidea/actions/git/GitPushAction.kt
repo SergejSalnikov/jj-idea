@@ -38,10 +38,10 @@ class GitPushAction : DumbAwareAction(
 
         // Load remotes and bookmarks off EDT, then show dialog on EDT
         runInBackground {
-            val (remotes, bookmarks) = GitPushDialog.Companion.loadDialogData(repo)
+            val data = GitPushDialog.loadDialogData(repo)
 
             runLater {
-                val dialog = GitPushDialog(project, remotes, bookmarks)
+                val dialog = GitPushDialog(project, data)
                 if (!dialog.showAndGet()) return@runLater
 
                 val spec = dialog.result ?: return@runLater

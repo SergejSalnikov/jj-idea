@@ -136,7 +136,11 @@ interface CommandExecutor {
      * @param template Optional template for output formatting
      * @return Command result with bookmark list
      */
-    fun bookmarkList(template: String? = null): CommandResult
+    fun bookmarkList(
+        template: String? = null,
+        remote: String? = null,
+        tracked: Boolean = false
+    ): CommandResult
 
     fun bookmarkCreate(name: Bookmark, revision: Revision = WorkingCopy): CommandResult
 
@@ -145,6 +149,10 @@ interface CommandExecutor {
     fun bookmarkRename(oldName: Bookmark, newName: Bookmark): CommandResult
 
     fun bookmarkSet(name: Bookmark, revision: Revision = WorkingCopy, allowBackwards: Boolean = false): CommandResult
+
+    fun bookmarkTrack(name: Bookmark): CommandResult
+
+    fun bookmarkUntrack(name: Bookmark): CommandResult
 
     /**
      * Get git-format diff for a revision (to detect renames)

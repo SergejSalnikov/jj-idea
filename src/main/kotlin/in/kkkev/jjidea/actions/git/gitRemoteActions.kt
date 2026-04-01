@@ -33,10 +33,10 @@ fun gitPushAction(project: Project, repo: JujutsuRepository?) =
     nullAndDumbAwareAction(repo, "log.action.git.push", AllIcons.Vcs.Push) {
         // Load remotes and bookmarks off EDT, then show dialog on EDT
         runInBackground {
-            val (remotes, bookmarks) = GitPushDialog.loadDialogData(target)
+            val data = GitPushDialog.loadDialogData(target)
 
             runLater {
-                val dialog = GitPushDialog(project, remotes, bookmarks)
+                val dialog = GitPushDialog(project, data)
                 if (!dialog.showAndGet()) return@runLater
 
                 val spec = dialog.result ?: return@runLater
