@@ -4,9 +4,24 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import java.awt.Component
 
-fun runInBackground(action: () -> Unit) = ApplicationManager.getApplication().executeOnPooledThread { action() }
+private val capturedModality = ThreadLocal<ModalityState>()
 
-fun runLater(action: () -> Unit) = ApplicationManager.getApplication().invokeLater { action() }
+fun runInBackground(action: () -> Unit) {
+    val modality = ModalityState.defaultModalityState()
+    ApplicationManager.getApplication().executeOnPooledThread {
+        capturedModality.set(modality)
+        try {
+            action()
+        } finally {
+            capturedModality.remove()
+        }
+    }
+}
+
+fun runLater(action: () -> Unit) {
+    val modality = capturedModality.get() ?: ModalityState.defaultModalityState()
+    ApplicationManager.getApplication().invokeLater({ action() }, modality)
+}
 
 fun runLaterInModal(component: Component, action: () -> Unit) =
     ApplicationManager.getApplication().invokeLater({ action() }, ModalityState.stateForComponent(component))
