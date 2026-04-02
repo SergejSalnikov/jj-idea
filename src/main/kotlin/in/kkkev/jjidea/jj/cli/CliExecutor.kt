@@ -34,34 +34,34 @@ internal fun bookmarkSetArgs(name: Bookmark, revision: Revision = WorkingCopy, a
     }
 
 /** Build the argument list for `jj git fetch`. */
-internal fun gitFetchArgs(remote: String? = null, allRemotes: Boolean = false): List<String> = buildList {
+internal fun gitFetchArgs(remote: Remote? = null, allRemotes: Boolean = false): List<String> = buildList {
     add("git")
     add("fetch")
     if (allRemotes) {
         add("--all-remotes")
     } else if (remote != null) {
         add("--remote")
-        add(remote)
+        add(remote.name)
     }
 }
 
 /** Build the argument list for `jj git push`. */
 internal fun gitPushArgs(
-    remote: String? = null,
-    bookmark: String? = null,
+    remote: Remote? = null,
+    bookmark: Bookmark? = null,
     allBookmarks: Boolean = false
 ): List<String> = buildList {
     add("git")
     add("push")
     if (remote != null) {
         add("--remote")
-        add(remote)
+        add(remote.name)
     }
     if (allBookmarks) {
         add("--all")
     } else if (bookmark != null) {
         add("--bookmark")
-        add(bookmark)
+        add(bookmark.name)
     }
 }
 
@@ -228,12 +228,12 @@ class CliExecutor(
         return execute(root, args)
     }
 
-    override fun bookmarkList(template: String?, remote: String?, tracked: Boolean): CommandExecutor.CommandResult {
+    override fun bookmarkList(template: String?, remote: Remote?, tracked: Boolean): CommandExecutor.CommandResult {
         val args = mutableListOf("bookmark", "list")
         if (tracked) args.add("--tracked")
         if (remote != null) {
             args.add("--remote")
-            args.add(remote)
+            args.add(remote.name)
         }
         if (template != null) {
             args.add("-T")
@@ -283,10 +283,10 @@ class CliExecutor(
         parallel: Boolean
     ) = execute(root, splitArgs(revision, filePaths.map { it.relativeTo(root!!) }, description, parallel))
 
-    override fun gitFetch(remote: String?, allRemotes: Boolean) =
+    override fun gitFetch(remote: Remote?, allRemotes: Boolean) =
         execute(root, gitFetchArgs(remote, allRemotes), timeout = networkTimeout)
 
-    override fun gitPush(remote: String?, bookmark: String?, allBookmarks: Boolean) =
+    override fun gitPush(remote: Remote?, bookmark: Bookmark?, allBookmarks: Boolean) =
         execute(root, gitPushArgs(remote, bookmark, allBookmarks), timeout = networkTimeout)
 
     override fun gitRemoteList() = execute(root, listOf("git", "remote", "list"))

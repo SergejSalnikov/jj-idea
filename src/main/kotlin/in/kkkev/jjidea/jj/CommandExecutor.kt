@@ -136,11 +136,7 @@ interface CommandExecutor {
      * @param template Optional template for output formatting
      * @return Command result with bookmark list
      */
-    fun bookmarkList(
-        template: String? = null,
-        remote: String? = null,
-        tracked: Boolean = false
-    ): CommandResult
+    fun bookmarkList(template: String? = null, remote: Remote? = null, tracked: Boolean = false): CommandResult
 
     fun bookmarkCreate(name: Bookmark, revision: Revision = WorkingCopy): CommandResult
 
@@ -187,7 +183,7 @@ interface CommandExecutor {
      * @param allRemotes Fetch from all remotes
      * @return Command result
      */
-    fun gitFetch(remote: String? = null, allRemotes: Boolean = false): CommandResult
+    fun gitFetch(remote: Remote? = null, allRemotes: Boolean = false): CommandResult
 
     /**
      * Push to a Git remote.
@@ -196,7 +192,7 @@ interface CommandExecutor {
      * @param allBookmarks Push all bookmarks
      * @return Command result
      */
-    fun gitPush(remote: String? = null, bookmark: String? = null, allBookmarks: Boolean = false): CommandResult
+    fun gitPush(remote: Remote? = null, bookmark: Bookmark? = null, allBookmarks: Boolean = false): CommandResult
 
     /**
      * Squash a change into its parent.

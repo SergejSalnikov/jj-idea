@@ -41,6 +41,11 @@ fun List<Bookmark>.grouped(): List<BookmarkGroup> =
     }
 
 @JvmInline
+value class Remote(val name: String) {
+    override fun toString() = name
+}
+
+@JvmInline
 value class Tag(val name: String) : Ref {
     override fun toString() = name
 }
