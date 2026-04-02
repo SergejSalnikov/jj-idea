@@ -53,6 +53,16 @@ class JjVersionTest {
     }
 
     @Test
+    fun `parse custom build version with prefix`() {
+        val version = JjVersion.parse("jj companyname-0.39.0-abc123def")
+
+        version.shouldNotBeNull()
+        version.major shouldBe 0
+        version.minor shouldBe 39
+        version.patch shouldBe 0
+    }
+
+    @Test
     fun `parse fails without jj prefix`() {
         JjVersion.parse("0.37.0").shouldBeNull()
         JjVersion.parse("git 2.40.0").shouldBeNull()

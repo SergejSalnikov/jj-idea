@@ -3,7 +3,7 @@ package `in`.kkkev.jjidea.jj
 /**
  * Represents a jj version (e.g., 0.37.0).
  *
- * Supports parsing from "jj 0.37.0" or "jj 0.37.0-rc1" format output by `jj --version`.
+ * Supports parsing from "jj 0.37.0", "jj 0.37.0-rc1", or "jj companyname-0.39.0-..." format output by `jj --version`.
  */
 @JvmInline
 value class JjVersion(private val components: Triple<Int, Int, Int>) : Comparable<JjVersion> {
@@ -33,6 +33,7 @@ value class JjVersion(private val components: Triple<Int, Int, Int>) : Comparabl
          * Examples:
          * - "jj 0.37.0" -> JjVersion(0, 37, 0)
          * - "jj 0.37.0-rc1" -> JjVersion(0, 37, 0)
+         * - "jj companyname-0.39.0-abc123" -> JjVersion(0, 39, 0)
          * - "0.37.0" -> null (must start with "jj")
          * - "invalid" -> null
          */
