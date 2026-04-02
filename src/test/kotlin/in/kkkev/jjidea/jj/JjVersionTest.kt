@@ -135,7 +135,9 @@ class JjVersionTest {
 
     @Test
     fun `parse version with company prefix and long suffix`() {
-        val version = JjVersion.parse("jj company-0.39.0-ae610e8da5040c41d19315acc54be334159b2b55-jj-client_20260324_01_RC01-888957854")
+        val version = JjVersion.parse(
+            "jj company-0.39.0-ae610e8da5040c41d19315acc54be334159b2b55-jj-client_20260324_01_RC01-888957854"
+        )
 
         version.shouldNotBeNull()
         version.major shouldBe 0
