@@ -10,7 +10,6 @@ import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
-import com.intellij.openapi.util.Disposer
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
@@ -356,24 +355,18 @@ class JujutsuConfigurable(private val project: Project) : BoundConfigurable(Juju
 
         repoSettingsDirty = false
 
-        // If executable path changed, recheck availability and refresh if now available
+        // If executable path changed, recheck availability and refresh downstream state
         val newPath = appSettings.state.jjExecutablePath
         if (newPath != previousPath) {
             previousPath = newPath
             val checker = JjAvailabilityChecker.getInstance(project)
-
-            // One-shot subscription: dispose after callback fires
-            val disposable = Disposer.newDisposable("JujutsuConfigurable.apply")
-            checker.status.connect(disposable) { status ->
-                if (status is JjAvailabilityStatus.Available) {
-                    // Trigger full refresh of state model
-                    project.stateModel.initializedRoots.invalidate()
-                }
-                Disposer.dispose(disposable)
-            }
-
-            // Trigger the recheck after subscribing
             checker.recheck()
+            // Directly trigger downstream refresh — initializedRoots.invalidate() alone
+            // may produce data-class-equal repos (same project+directory), suppressing the
+            // change notification. Explicitly refreshing repositoryStates and logRefresh
+            // ensures the UI picks up the new executable immediately.
+            project.stateModel.repositoryStates.invalidate()
+            project.stateModel.logRefresh.notify(Unit)
         }
 
         // If log limit changed, reload the log
@@ -415,6 +408,11 @@ class JujutsuConfigurable(private val project: Project) : BoundConfigurable(Juju
                                     exe.path.toString()
                                 )
                             )
+                            // If the tested path matches the currently applied path,
+                            // trigger a recheck so the plugin picks up an upgraded binary
+                            if (path == appSettings.state.jjExecutablePath) {
+                                JjAvailabilityChecker.getInstance(project).recheck()
+                            }
                         } else {
                             showValidationResult(
                                 false,

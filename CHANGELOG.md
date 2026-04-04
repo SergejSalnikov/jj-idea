@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `jj config get` now runs in repo context, picking up repo-scoped config (GitHub #9)
+- Changed jj executable path in settings now takes effect immediately without IDE restart
+- Upgrading jj binary in-place (same path) now detected when clicking Test button, refreshing working copy and log automatically
 
 ## [0.5.16] - 2026-04-03
 
