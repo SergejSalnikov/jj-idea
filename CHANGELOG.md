@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.17] - 2026-04-04
+
 ## [0.5.16] - 2026-04-03
 
 ### Changed
@@ -282,7 +284,8 @@ numerous improvements made during the 0.1.x development cycle.
 - Refactored log tab management
 - Change hashes from change IDs to commit IDs for platform compatibility
 
-[Unreleased]: https://github.com/kkkev/jj-idea/compare/v0.5.16...HEAD
+[Unreleased]: https://github.com/kkkev/jj-idea/compare/v0.5.17...HEAD
+[0.5.17]: https://github.com/kkkev/jj-idea/releases/tag/v0.5.17
 [0.5.16]: https://github.com/kkkev/jj-idea/releases/tag/v0.5.16
 [0.5.15]: https://github.com/kkkev/jj-idea/releases/tag/v0.5.15
 [0.5.14]: https://github.com/kkkev/jj-idea/releases/tag/v0.5.14
